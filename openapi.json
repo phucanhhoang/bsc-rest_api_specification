@@ -40,7 +40,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "allOf" : [ {
+                  "oneOf" : [ {
                     "$ref" : "#/components/schemas/AuthorizeResponse"
                   }, {
                     "$ref" : "#/components/schemas/ErrorResponse"
