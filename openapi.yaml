@@ -41,7 +41,8 @@ info:
       please use the following endpoints - [/groups](#operation/getGroups) and [/permissions](#operation/getPermissions).
 
       You can find more information about restricting access to the data in the description of these endpoints.
-  x-logo: 
+  x-logo:
+    url: https://www.bsc.com.vn/theme/image/logo.png
 
 servers:
   - url: https://api.fss.com.vn
