@@ -1,0 +1,2912 @@
+{
+  "openapi" : "3.0.0",
+  "info" : {
+    "title" : "BSC REST API Specification for Brokers",
+    "description" : "## Overview\n  This API is to be implemented by the Brokers in order to connect their backend systems to BSC, that acts as a frontend.\n\n  ### Types of requests\n  There are two types of requests — client and server.\n  Client requests are executed at the browser. Server requests are initiated from the BSC servers.\n  If your integration does not imply brokerage data stream connection to the BSC website -\n  then there won't be any server requests.\n\n  #### Clients requests\n  From the browser BSC requests the info (list of orders and positions, balance info, etc.) from the broker’s server.\n  The requests are sent periodically and the intervals can be set by using the [/config](#operation/getConfiguration) endpoint.\n  After that, BSC compares the new data with the previous answer and calculates the difference.\n  If the status of the order/position changes or new data appears - the user will see a notification and the changes\n  will display in the Account Manager on the website.\n\n  Requests to the [endpoints](/rest-api-spec/#tag/Trading) for placing/modifying orders, positions closing, etc. occur only after actions made by the user.\n\n  The [/quotes](#operation/getQuotes) endpoint retrieves the current bid/ask from the broker.\n  The [/depth](#operation/getDepth) endpoint retrieves Level 2 market data.\n\n  #### Server requests\n  In case if a Broker provides any Forex or CFD trading access for its clients it will require connection\n  of its own market data at BSC. In order to make it possible, you will need to implement the following endpoints -\n    [/symbol_info](#operation/getSymbolInfo), [/history](#operation/getHistory) and [/streaming](#operation/streaming).\n  Data requests are sent from different BSC servers.\n  The historical data is cached on BSC servers and loaded to the client browser from our servers.\n\n  ### Restricting access to data\n  By default, the broker symbols will be available in the symbol search at BSC and all the community\n  will have access to your data streams without any limitation. In order to limit the access to your data streams\n  please use the following endpoints - [/groups](#operation/getGroups) and [/permissions](#operation/getPermissions).\n\n  You can find more information about restricting access to the data in the description of these endpoints.\n",
+    "version" : "1.0"
+  },
+  "servers" : [ {
+    "url" : "https://api.bsc.com.vn",
+    "description" : "BSC REST API implementation url."
+  } ],
+  "paths" : {
+    "/authorize" : {
+      "post" : {
+        "tags" : [ "Password authentication" ],
+        "summary" : "Authorize",
+        "description" : "Username and password authentication with the optional 2FA support.",
+        "operationId" : "authorize",
+        "requestBody" : {
+          "content" : {
+            "application/x-www-form-urlencoded" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/body"
+              },
+              "example" : {
+                "login" : "user1",
+                "password" : "dfkjhoijogpoi",
+                "2faCode" : 3456753
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "response",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "oneOf" : [ {
+                    "$ref" : "#/components/schemas/AuthorizeResponse"
+                  }, {
+                    "$ref" : "#/components/schemas/ErrorResponse"
+                  } ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/config" : {
+      "get" : {
+        "tags" : [ "Broker configuration" ],
+        "summary" : "Configuration",
+        "description" : "Get localized configuration.",
+        "parameters" : [ {
+          "name" : "locale",
+          "in" : "query",
+          "description" : "Locale (language) id.",
+          "required" : true,
+          "style" : "form",
+          "explode" : true,
+          "schema" : {
+            "type" : "string",
+            "enum" : [ "ar", "cs", "de", "el", "en", "es", "fa", "fr", "hu", "it", "ja", "ko", "nl", "pl", "pt", "ro", "ru", "sk", "sv", "th", "tr", "vi", "zh" ]
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "response",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ConfigResponse"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "PasswordBearer" : [ ]
+        }, {
+          "OAuth2Bearer" : [ "bearer laksdjf09wu4r0wjer023u409u2fij30934ur024jr" ]
+        } ]
+      }
+    },
+    "/mapping" : {
+      "get" : {
+        "tags" : [ "Broker configuration" ],
+        "summary" : "Mapping",
+        "description" : "Return all broker instruments with corresponding BSC instruments.\nIt is required to add a Broker to BSC.com.\nPlease note that this endpoint works without authorization!\n",
+        "responses" : {
+          "200" : {
+            "description" : "response",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/MappingResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/accounts" : {
+      "get" : {
+        "tags" : [ "Account" ],
+        "summary" : "Accounts",
+        "description" : "Get a list of accounts owned by the user.",
+        "responses" : {
+          "200" : {
+            "description" : "response",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AccountResponse"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "PasswordBearer" : [ ]
+        }, {
+          "OAuth2Bearer" : [ ]
+        } ]
+      }
+    },
+    "/accounts/{accountId}/state" : {
+      "get" : {
+        "tags" : [ "Account" ],
+        "summary" : "State",
+        "description" : "Get account information.",
+        "parameters" : [ {
+          "name" : "accountId",
+          "in" : "path",
+          "description" : "Account identifier.",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "locale",
+          "in" : "query",
+          "description" : "Locale (language) id.",
+          "required" : true,
+          "style" : "form",
+          "explode" : true,
+          "schema" : {
+            "type" : "string",
+            "enum" : [ "ar", "cs", "de", "el", "en", "es", "fa", "fr", "hu", "it", "ja", "ko", "nl", "pl", "pt", "ro", "ru", "sk", "sv", "th", "tr", "vi", "zh" ]
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "response",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AccountStateResponse"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "PasswordBearer" : [ ]
+        }, {
+          "OAuth2Bearer" : [ ]
+        } ]
+      }
+    },
+    "/accounts/{accountId}/orders" : {
+      "get" : {
+        "tags" : [ "Account" ],
+        "summary" : "Orders",
+        "description" : "Get current session orders for the account. It is expected that broker returns orders\nfilled/cancelled/rejected during current session.\n",
+        "parameters" : [ {
+          "name" : "accountId",
+          "in" : "path",
+          "description" : "Account identifier.",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "response",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/OrdersResponse"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "PasswordBearer" : [ ]
+        }, {
+          "OAuth2Bearer" : [ ]
+        } ]
+      },
+      "post" : {
+        "tags" : [ "Trading" ],
+        "summary" : "Place Order",
+        "description" : "Place a new order.\n",
+        "parameters" : [ {
+          "name" : "accountId",
+          "in" : "path",
+          "description" : "Account identifier.",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "requestId",
+          "in" : "query",
+          "description" : "Unique identifier for a request.",
+          "required" : false,
+          "style" : "form",
+          "explode" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "example" : 23425678343
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/body_1"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "response",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PostOrderResponse"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "PasswordBearer" : [ ]
+        }, {
+          "OAuth2Bearer" : [ ]
+        } ]
+      }
+    },
+    "/accounts/{accountId}/positions" : {
+      "get" : {
+        "tags" : [ "Account" ],
+        "summary" : "Positions",
+        "description" : "Get positions for an account.",
+        "parameters" : [ {
+          "name" : "accountId",
+          "in" : "path",
+          "description" : "Account identifier.",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "response",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PositionsResponse"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "PasswordBearer" : [ ]
+        }, {
+          "OAuth2Bearer" : [ ]
+        } ]
+      }
+    },
+    "/accounts/{accountId}/executions" : {
+      "get" : {
+        "tags" : [ "Account" ],
+        "summary" : "Executions",
+        "description" : "Get the orders that were executed during the current session for the account.\nIt is expected that broker returns orders filled/cancelled/rejected during current session.\n",
+        "parameters" : [ {
+          "name" : "accountId",
+          "in" : "path",
+          "description" : "Account identifier.",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "instrument",
+          "in" : "query",
+          "description" : "Broker instrument name.",
+          "required" : true,
+          "style" : "form",
+          "explode" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "maxCount",
+          "in" : "query",
+          "description" : "Maximum count of executions to return.",
+          "required" : false,
+          "style" : "form",
+          "explode" : true,
+          "schema" : {
+            "type" : "number"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "response",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ExecutionsResponse"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "PasswordBearer" : [ ]
+        }, {
+          "OAuth2Bearer" : [ ]
+        } ]
+      }
+    },
+    "/accounts/{accountId}/instruments" : {
+      "get" : {
+        "tags" : [ "Account" ],
+        "summary" : "Instruments",
+        "description" : "Get the list of the instruments that are available for trading with the specified account.\n",
+        "parameters" : [ {
+          "name" : "accountId",
+          "in" : "path",
+          "description" : "Account identifier.",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "response",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/InstrumentsResponse"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "PasswordBearer" : [ ]
+        }, {
+          "OAuth2Bearer" : [ ]
+        } ]
+      }
+    },
+    "/accounts/{accountId}/permissions" : {
+      "get" : {
+        "tags" : [ "Account" ],
+        "summary" : "Permissions",
+        "description" : "Get a list of symbol groups allowed for the user.\nIt is only required if you use groups of symbols to restrict access to instrument's data.\n",
+        "parameters" : [ {
+          "name" : "accountId",
+          "in" : "path",
+          "description" : "Account identifier.",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "response",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PermissionsResponse"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "PasswordBearer" : [ ]
+        }, {
+          "OAuth2Bearer" : [ ]
+        } ]
+      }
+    },
+    "/accounts/{accountId}/ordersHistory" : {
+      "get" : {
+        "tags" : [ "Account" ],
+        "summary" : "Orders History",
+        "description" : "Get order history for an account. It is expected that returned orders\nwill have a final status (`rejected`, `filled`, `cancelled`). This endpoint is\noptional. If you don't support orders history, please set\n`AccountFlags::supportOrdersHistory` to `false`.\n",
+        "parameters" : [ {
+          "name" : "accountId",
+          "in" : "path",
+          "description" : "Account identifier.",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "maxCount",
+          "in" : "query",
+          "description" : "Maximum count of orders to return.",
+          "required" : false,
+          "style" : "form",
+          "explode" : true,
+          "schema" : {
+            "type" : "number"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "response",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/OrdersHistoryResponse"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "PasswordBearer" : [ ]
+        }, {
+          "OAuth2Bearer" : [ ]
+        } ]
+      }
+    },
+    "/accounts/{accountId}/balances" : {
+      "get" : {
+        "tags" : [ "Crypto Balances" ],
+        "summary" : "Balances",
+        "description" : "Return all balances for the user account. Used for crypto currencies only.",
+        "parameters" : [ {
+          "name" : "accountId",
+          "in" : "path",
+          "description" : "Account identifier.",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "response",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/BalancesResponse"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "PasswordBearer" : [ ]
+        }, {
+          "OAuth2Bearer" : [ ]
+        } ]
+      }
+    },
+    "/accounts/{accountId}/orders/{orderId}" : {
+      "put" : {
+        "tags" : [ "Trading" ],
+        "summary" : "Modify Order",
+        "description" : "Modify an existing order.",
+        "parameters" : [ {
+          "name" : "accountId",
+          "in" : "path",
+          "description" : "Account identifier.",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "orderId",
+          "in" : "path",
+          "description" : "Order identifier.",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/x-www-form-urlencoded" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/body_2"
+              }
+            }
+          }
+        },
+        "responses" : {
+          "200" : {
+            "description" : "response",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "PasswordBearer" : [ ]
+        }, {
+          "OAuth2Bearer" : [ ]
+        } ]
+      },
+      "delete" : {
+        "tags" : [ "Trading" ],
+        "summary" : "Cancel Order",
+        "description" : "Cancel an existing order.",
+        "parameters" : [ {
+          "name" : "accountId",
+          "in" : "path",
+          "description" : "Account identifier.",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "orderId",
+          "in" : "path",
+          "description" : "Order identifier.",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "response",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "PasswordBearer" : [ ]
+        }, {
+          "OAuth2Bearer" : [ ]
+        } ]
+      }
+    },
+    "/accounts/{accountId}/positions/{positionId}" : {
+      "put" : {
+        "tags" : [ "Trading" ],
+        "summary" : "Modify Position",
+        "description" : "Modify an existing position stop loss or take profit or both.\n",
+        "parameters" : [ {
+          "name" : "accountId",
+          "in" : "path",
+          "description" : "Account identifier.",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "positionId",
+          "in" : "path",
+          "description" : "Position identifier.",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/x-www-form-urlencoded" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/body_3"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "response",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "PasswordBearer" : [ ]
+        }, {
+          "OAuth2Bearer" : [ ]
+        } ]
+      },
+      "delete" : {
+        "tags" : [ "Trading" ],
+        "summary" : "Close Position",
+        "description" : "Close an existing position.",
+        "parameters" : [ {
+          "name" : "accountId",
+          "in" : "path",
+          "description" : "Account identifier.",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "positionId",
+          "in" : "path",
+          "description" : "Position identifier.",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "response",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "PasswordBearer" : [ ]
+        }, {
+          "OAuth2Bearer" : [ ]
+        } ]
+      }
+    },
+    "/quotes" : {
+      "get" : {
+        "tags" : [ "Market Data" ],
+        "summary" : "Quotes",
+        "description" : "Get current prices of the instrument.\n",
+        "parameters" : [ {
+          "name" : "symbols",
+          "in" : "query",
+          "description" : "Comma separated symbol list.",
+          "required" : true,
+          "style" : "form",
+          "explode" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "response",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/QuotesResponse"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "PasswordBearer" : [ ]
+        }, {
+          "OAuth2Bearer" : [ ]
+        } ]
+      }
+    },
+    "/depth" : {
+      "get" : {
+        "tags" : [ "Market Data" ],
+        "summary" : "Depth",
+        "description" : "Get current depth of market for the instrument. Optional.",
+        "parameters" : [ {
+          "name" : "symbol",
+          "in" : "query",
+          "description" : "Instrument name.",
+          "required" : true,
+          "style" : "form",
+          "explode" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "response",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/DepthResponse"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "PasswordBearer" : [ ]
+        }, {
+          "OAuth2Bearer" : [ ]
+        } ]
+      }
+    },
+    "/groups" : {
+      "get" : {
+        "tags" : [ "Data Integration" ],
+        "summary" : "Groups",
+        "description" : "Get a list of possible groups of symbols.\nA group is a set of symbols that share a common access level. Any user can have access to any number of such groups.\n\n**IMPORTANT:**\nPlease plan your symbol grouping carefully. Groups cannot be deleted, you can only remove all the symbols from there.\n\n**LIMITATIONS:**\nEach integration is limited to have up to 10 symbol groups.\nEach symbol group is limited to have up to 10K symbols in it.\nYou cannot put the same symbol into 2 different groups.\n\nThis endpoint allows you to specify a list of groups, and the [/permissions](#operation/getPermissions) endpoint specifies\nwhich groups are available for the certain user.\n\nWhen BSC user logs into his broker account - he will gain access to one or more groups,\ndepending on the [/permissions](#operation/getPermissions) endpoint.\n\nAt the [/symbol_info](#operation/getSymbolInfo) endpoint BSC adds the GET argument `group`\nwith the name of the group. Thus, BSC will receive information about which group each symbol belongs to.\n\nIt is required only if you use groups of symbols in order to restrict access to the instrument's data.\n",
+        "responses" : {
+          "200" : {
+            "description" : "response",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/GroupListResponse"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "PasswordBearer" : [ ]
+        }, {
+          "ServerOAuth2Bearer" : [ ]
+        } ]
+      }
+    },
+    "/symbol_info" : {
+      "get" : {
+        "tags" : [ "Data Integration" ],
+        "summary" : "Symbol Info",
+        "description" : "Get a list of all instruments.",
+        "parameters" : [ {
+          "name" : "group",
+          "in" : "query",
+          "description" : "ID of a symbol group. If it presents then only symbols that belong to this group should be returned.\nPossible values are provided by the [/groups](#operation/getGroups) endpoint.\nIt is only required if you use groups of symbols to restrict access to instrument's data.\n",
+          "required" : false,
+          "style" : "form",
+          "explode" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "response",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "oneOf" : [ {
+                    "$ref" : "#/components/schemas/SymbolInfoResponse"
+                  } ]
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "PasswordBearer" : [ ]
+        }, {
+          "ServerOAuth2Bearer" : [ ]
+        } ]
+      }
+    },
+    "/history" : {
+      "get" : {
+        "tags" : [ "Data Integration" ],
+        "summary" : "History",
+        "description" : "Request for history bars. Each property of the response object is treated as a table column.\n\nBar time for daily bars should be 00:00 UTC and is expected to be a trading day\n(not a day when the session starts).\n\nBar time for monthly bars should be 00:00 UTC and is the first trading day of the month.\n\nIf there is no data in the requested time period but there is data in the previous time period\nyou should set the status code to `no_data` and the `nb` property to UNIX timestamp of the next\navailable bar behind the range.\n\nIf there is no data in the requested and previous time periods then you should set the status code to `no_data`.\n",
+        "parameters" : [ {
+          "name" : "symbol",
+          "in" : "query",
+          "description" : "Symbol name or ticker.",
+          "required" : true,
+          "style" : "form",
+          "explode" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "resolution",
+          "in" : "query",
+          "description" : "Symbol resolution. Possible resolutions are daily (`D` or `1D`, `2D` ... ),\nweekly (`1W`, `2W` ...), monthly (`1M`, `2M`...) and an intra-day\nresolution &ndash; minutes(`1`, `2` ...).\n",
+          "required" : true,
+          "style" : "form",
+          "explode" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "from",
+          "in" : "query",
+          "description" : "Unix timestamp (UTC) of the leftmost required bar, including `from`.",
+          "required" : true,
+          "style" : "form",
+          "explode" : true,
+          "schema" : {
+            "type" : "number"
+          }
+        }, {
+          "name" : "to",
+          "in" : "query",
+          "description" : "Unix timestamp (UTC) of the rightmost required bar, including `to`. It can be in the future.\nIn this case, the rightmost required bar is the latest available bar.\n",
+          "required" : true,
+          "style" : "form",
+          "explode" : true,
+          "schema" : {
+            "type" : "number"
+          }
+        }, {
+          "name" : "countback",
+          "in" : "query",
+          "description" : "Number of bars (higher priority than `from`) starting with `to`. If\n`countback` is set, `from` should be ignored.\n",
+          "required" : false,
+          "style" : "form",
+          "explode" : true,
+          "schema" : {
+            "type" : "number"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "response",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "oneOf" : [ {
+                    "$ref" : "#/components/schemas/HistorySuccessResponse"
+                  }, {
+                    "$ref" : "#/components/schemas/HistoryNoDataResponse"
+                  }, {
+                    "$ref" : "#/components/schemas/HistoryNextBarResponse"
+                  }, {
+                    "$ref" : "#/components/schemas/ErrorResponse"
+                  } ]
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "PasswordBearer" : [ ]
+        }, {
+          "ServerOAuth2Bearer" : [ ]
+        } ]
+      }
+    },
+    "/streaming" : {
+      "get" : {
+        "tags" : [ "Data Integration" ],
+        "summary" : "Stream of prices",
+        "description" : "Stream of prices. Server constantly keeps the connection alive. If the\nconnection is broken - the server constantly tries to restore it.\nBSC establishes up to 4 simultaneous connections to this endpoint and\nexpects to get the same data to all of them.\nTransfer mode is `chunked encoding`. The data feed should set `'Transfer-Encoding:\nchunked'` and make sure that all intermediate proxies are set to use this\nmode. All messages are to be ended with `\\n`. Data stream should contain\nreal-time data only. It shouldn't contain snapshots of data.\n\nData feed should provide ticks (trades, asks, bids) and daily bars.\n\nIf trades are not provided, then data feed should set trades to bids.\n\nIf there is only ask/bid implementation you must also set the trade\n(same as bid but it's size must be >= `1`).\n\nSize for trades is always >= `1` except for a correction. In case of\ncorrection - size can be `0`.\n\nDaily bars are required if they cannot be built from ticks (`has_daily`\nshould be set to `true` in the symbol information).\n\nThe broker must remove unnecessary restrictions (firewall, rate limits, etc.) for the set of IP addresses of our servers.\n",
+        "responses" : {
+          "200" : {
+            "description" : "response",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "oneOf" : [ {
+                    "$ref" : "#/components/schemas/StreamingAskResponse"
+                  }, {
+                    "$ref" : "#/components/schemas/StreamingBidResponse"
+                  }, {
+                    "$ref" : "#/components/schemas/StreamingTradeResponse"
+                  }, {
+                    "$ref" : "#/components/schemas/StreamingDailyBarResponse"
+                  } ]
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "PasswordBearer" : [ ]
+        }, {
+          "ServerOAuth2Bearer" : [ ]
+        } ]
+      }
+    }
+  },
+  "components" : {
+    "schemas" : {
+      "Status" : {
+        "type" : "string",
+        "enum" : [ "ok", "error" ]
+      },
+      "ErrorResponse" : {
+        "required" : [ "errmsg", "s" ],
+        "type" : "object",
+        "properties" : {
+          "s" : {
+            "type" : "string",
+            "description" : "Status will always be `error`.",
+            "example" : "error"
+          },
+          "errmsg" : {
+            "type" : "string",
+            "description" : "Error message.",
+            "example" : "An error occurred."
+          }
+        }
+      },
+      "SuccessResponse" : {
+        "required" : [ "s" ],
+        "type" : "object",
+        "properties" : {
+          "s" : {
+            "type" : "string",
+            "description" : "Status will always be `ok`.",
+            "example" : "ok"
+          }
+        }
+      },
+      "AuthorizeResponse" : {
+        "allOf" : [ {
+          "$ref" : "#/components/schemas/SuccessResponse"
+        }, {
+          "required" : [ "d" ],
+          "type" : "object",
+          "properties" : {
+            "d" : {
+              "$ref" : "#/components/schemas/AccessToken"
+            }
+          }
+        } ]
+      },
+      "ConfigResponse" : {
+        "allOf" : [ {
+          "$ref" : "#/components/schemas/SuccessResponse"
+        }, {
+          "required" : [ "d" ],
+          "type" : "object",
+          "properties" : {
+            "d" : {
+              "$ref" : "#/components/schemas/Config"
+            }
+          }
+        } ]
+      },
+      "MappingResponse" : {
+        "allOf" : [ {
+          "$ref" : "#/components/schemas/SuccessResponse"
+        }, {
+          "required" : [ "d" ],
+          "type" : "object",
+          "properties" : {
+            "d" : {
+              "$ref" : "#/components/schemas/SymbolMapping"
+            }
+          }
+        } ]
+      },
+      "AccountResponse" : {
+        "allOf" : [ {
+          "$ref" : "#/components/schemas/SuccessResponse"
+        }, {
+          "required" : [ "d" ],
+          "type" : "object",
+          "properties" : {
+            "d" : {
+              "type" : "array",
+              "items" : {
+                "$ref" : "#/components/schemas/Account"
+              }
+            }
+          }
+        } ]
+      },
+      "AccountStateResponse" : {
+        "allOf" : [ {
+          "$ref" : "#/components/schemas/SuccessResponse"
+        }, {
+          "required" : [ "d" ],
+          "type" : "object",
+          "properties" : {
+            "d" : {
+              "$ref" : "#/components/schemas/AccountState"
+            }
+          }
+        } ]
+      },
+      "ExecutionsResponse" : {
+        "allOf" : [ {
+          "$ref" : "#/components/schemas/SuccessResponse"
+        }, {
+          "required" : [ "d" ],
+          "type" : "object",
+          "properties" : {
+            "d" : {
+              "type" : "array",
+              "items" : {
+                "$ref" : "#/components/schemas/Execution"
+              }
+            }
+          }
+        } ]
+      },
+      "InstrumentsResponse" : {
+        "allOf" : [ {
+          "$ref" : "#/components/schemas/SuccessResponse"
+        }, {
+          "required" : [ "d" ],
+          "type" : "object",
+          "properties" : {
+            "d" : {
+              "type" : "array",
+              "example" : [ {
+                "name" : "EURUSD",
+                "description" : "EUR/USD ",
+                "minQty" : 1,
+                "maxQty" : 100000000,
+                "qtyStep" : 100,
+                "pipSize" : 1.0E-4,
+                "pipValue" : 8.845E-5,
+                "minTick" : 1.0E-5,
+                "type" : "forex"
+              }, {
+                "name" : "AAPLE",
+                "description" : "Apple Inc",
+                "minQty" : 1,
+                "maxQty" : 100000000,
+                "qtyStep" : 1,
+                "pipSize" : 0.01,
+                "pipValue" : 1,
+                "minTick" : 0.01,
+                "type" : "stock"
+              } ],
+              "items" : {
+                "$ref" : "#/components/schemas/Instrument"
+              }
+            }
+          }
+        } ]
+      },
+      "PermissionsResponse" : {
+        "allOf" : [ {
+          "$ref" : "#/components/schemas/SuccessResponse"
+        }, {
+          "required" : [ "d" ],
+          "type" : "object",
+          "properties" : {
+            "d" : {
+              "type" : "array",
+              "items" : {
+                "$ref" : "#/components/schemas/Permissions"
+              }
+            }
+          }
+        } ]
+      },
+      "BalancesResponse" : {
+        "allOf" : [ {
+          "$ref" : "#/components/schemas/SuccessResponse"
+        }, {
+          "required" : [ "d" ],
+          "type" : "object",
+          "properties" : {
+            "d" : {
+              "type" : "array",
+              "items" : {
+                "$ref" : "#/components/schemas/Balance"
+              }
+            }
+          }
+        } ]
+      },
+      "OrdersResponse" : {
+        "allOf" : [ {
+          "$ref" : "#/components/schemas/SuccessResponse"
+        }, {
+          "required" : [ "d" ],
+          "type" : "object",
+          "properties" : {
+            "d" : {
+              "type" : "array",
+              "example" : [ {
+                "id" : "1",
+                "instrument" : "EURUSD",
+                "qty" : 100,
+                "side" : "buy",
+                "type" : "limit",
+                "avgPrice" : 0,
+                "limitPrice" : 1.14344,
+                "duration" : {
+                  "type" : "gtt",
+                  "datetime" : 1548406235
+                },
+                "status" : "working"
+              }, {
+                "id" : "2",
+                "instrument" : "EURUSD",
+                "qty" : 100,
+                "side" : "sell",
+                "type" : "limit",
+                "filledQty" : 50,
+                "avgPrice" : 0,
+                "limitPrice" : 1.15094,
+                "parentId" : "1",
+                "parentType" : "order",
+                "duration" : {
+                  "type" : "gtt",
+                  "datetime" : 1548406235
+                },
+                "status" : "inactive"
+              } ],
+              "items" : {
+                "$ref" : "#/components/schemas/Order"
+              }
+            }
+          }
+        } ]
+      },
+      "OrdersHistoryResponse" : {
+        "allOf" : [ {
+          "$ref" : "#/components/schemas/SuccessResponse"
+        }, {
+          "required" : [ "d" ],
+          "type" : "object",
+          "properties" : {
+            "d" : {
+              "type" : "array",
+              "example" : [ {
+                "id" : "1",
+                "instrument" : "EURUSD",
+                "qty" : 100,
+                "side" : "buy",
+                "type" : "limit",
+                "avgPrice" : 0,
+                "limitPrice" : 1.14344,
+                "duration" : {
+                  "type" : "gtt",
+                  "datetime" : 1548406235
+                },
+                "status" : "filled"
+              }, {
+                "id" : "2",
+                "instrument" : "EURUSD",
+                "qty" : 100,
+                "side" : "sell",
+                "type" : "limit",
+                "filledQty" : 50,
+                "avgPrice" : 0,
+                "limitPrice" : 1.15094,
+                "parentId" : "1",
+                "parentType" : "order",
+                "duration" : {
+                  "type" : "gtt",
+                  "datetime" : 1548406235
+                },
+                "status" : "cancelled"
+              } ],
+              "items" : {
+                "$ref" : "#/components/schemas/OrderHistory"
+              }
+            }
+          }
+        } ]
+      },
+      "PositionsResponse" : {
+        "allOf" : [ {
+          "$ref" : "#/components/schemas/SuccessResponse"
+        }, {
+          "required" : [ "d" ],
+          "type" : "object",
+          "properties" : {
+            "d" : {
+              "type" : "array",
+              "items" : {
+                "$ref" : "#/components/schemas/Position"
+              }
+            }
+          }
+        } ]
+      },
+      "PostOrderResponse" : {
+        "allOf" : [ {
+          "$ref" : "#/components/schemas/SuccessResponse"
+        }, {
+          "required" : [ "d" ],
+          "type" : "object",
+          "properties" : {
+            "d" : {
+              "$ref" : "#/components/schemas/PostOrderResponse_d"
+            }
+          }
+        } ]
+      },
+      "QuotesResponse" : {
+        "allOf" : [ {
+          "$ref" : "#/components/schemas/SuccessResponse"
+        }, {
+          "required" : [ "d" ],
+          "type" : "object",
+          "properties" : {
+            "d" : {
+              "type" : "array",
+              "items" : {
+                "$ref" : "#/components/schemas/QuotesResponse_d"
+              }
+            }
+          }
+        } ]
+      },
+      "DepthResponse" : {
+        "allOf" : [ {
+          "$ref" : "#/components/schemas/SuccessResponse"
+        }, {
+          "required" : [ "d" ],
+          "type" : "object",
+          "properties" : {
+            "d" : {
+              "$ref" : "#/components/schemas/Depth"
+            }
+          }
+        } ]
+      },
+      "GroupListResponse" : {
+        "allOf" : [ {
+          "$ref" : "#/components/schemas/SuccessResponse"
+        }, {
+          "required" : [ "d" ],
+          "type" : "object",
+          "properties" : {
+            "d" : {
+              "$ref" : "#/components/schemas/GroupList"
+            }
+          }
+        } ]
+      },
+      "SymbolInfoResponse" : {
+        "allOf" : [ {
+          "$ref" : "#/components/schemas/SuccessResponse"
+        }, {
+          "$ref" : "#/components/schemas/SymbolInfoArrays"
+        } ]
+      },
+      "HistorySuccessResponse" : {
+        "allOf" : [ {
+          "$ref" : "#/components/schemas/SuccessResponse"
+        }, {
+          "$ref" : "#/components/schemas/BarsArrays"
+        } ]
+      },
+      "HistoryNoDataResponse" : {
+        "required" : [ "s" ],
+        "type" : "object",
+        "properties" : {
+          "s" : {
+            "type" : "string",
+            "description" : "Status will always be `no_data`.",
+            "example" : "no_data"
+          }
+        }
+      },
+      "HistoryNextBarResponse" : {
+        "required" : [ "nb", "s" ],
+        "type" : "object",
+        "properties" : {
+          "s" : {
+            "type" : "string",
+            "description" : "Status will always be `no_data`.",
+            "example" : "no_data"
+          },
+          "nb" : {
+            "type" : "number",
+            "description" : "Unix time of the next bar if there is no data in the requested period (optional).",
+            "example" : 1484871000
+          }
+        }
+      },
+      "StreamingAskResponse" : {
+        "allOf" : [ {
+          "$ref" : "#/components/schemas/StreamingAskItemType"
+        }, {
+          "$ref" : "#/components/schemas/StreamingAskBidTradeItem"
+        } ]
+      },
+      "StreamingBidResponse" : {
+        "allOf" : [ {
+          "$ref" : "#/components/schemas/StreamingBidItemType"
+        }, {
+          "$ref" : "#/components/schemas/StreamingAskBidTradeItem"
+        } ]
+      },
+      "StreamingTradeResponse" : {
+        "allOf" : [ {
+          "$ref" : "#/components/schemas/StreamingTradeItemType"
+        }, {
+          "$ref" : "#/components/schemas/StreamingAskBidTradeItem"
+        } ]
+      },
+      "StreamingDailyBarResponse" : {
+        "allOf" : [ {
+          "$ref" : "#/components/schemas/StreamingDailyBarType"
+        }, {
+          "required" : [ "c", "h", "id", "l", "o", "v" ],
+          "type" : "object",
+          "properties" : {
+            "id" : {
+              "type" : "string",
+              "description" : "Symbol",
+              "example" : "EURUSD"
+            },
+            "o" : {
+              "type" : "number",
+              "description" : "Open.",
+              "example" : 3667
+            },
+            "h" : {
+              "type" : "number",
+              "description" : "High.",
+              "example" : 3667.24
+            },
+            "l" : {
+              "type" : "number",
+              "description" : "Low.",
+              "example" : 3661.55
+            },
+            "c" : {
+              "type" : "number",
+              "description" : "Close.",
+              "example" : 3662.25
+            },
+            "v" : {
+              "type" : "number",
+              "description" : "Volume.",
+              "example" : 34
+            }
+          },
+          "description" : "Daily bar"
+        } ]
+      },
+      "AccessToken" : {
+        "required" : [ "access_token", "expiration" ],
+        "type" : "object",
+        "properties" : {
+          "access_token" : {
+            "type" : "string",
+            "description" : "Access token acts as a session ID that the application uses for making\nrequests. This token should be protected as if it were user\ncredentials.\n",
+            "example" : "7133au-cba5a72-842029c"
+          },
+          "expiration" : {
+            "type" : "number",
+            "description" : "The time when the token is expired is represented as the number of\nseconds since the Unix epoch (00:00:00 UTC on 1 January 1970).\n",
+            "example" : 1548661401
+          },
+          "2fa_required" : {
+            "type" : "boolean",
+            "description" : "Set it to `true` if Two Factor Authentication Code is required in the next /authorize request."
+          }
+        },
+        "description" : "Access token."
+      },
+      "Config" : {
+        "type" : "object",
+        "properties" : {
+          "accountManager" : {
+            "type" : "array",
+            "description" : "Localized account manager's tables configuration. Account Manager is a\npage in the bottom widget. This page can have multiple tables. Data of\nthe tables is filled using the [/state](/rest-api-spec/#operation/getState) endpoint.\n",
+            "example" : [ {
+              "id" : "accountSummary",
+              "title" : "",
+              "columns" : [ {
+                "id" : "todayPL",
+                "title" : "Today's P&L"
+              }, {
+                "id" : "accountValue",
+                "title" : "Account Value"
+              }, {
+                "id" : "balance",
+                "title" : "Balance"
+              }, {
+                "id" : "totalMargin",
+                "title" : "Margin"
+              }, {
+                "id" : "held",
+                "title" : "Held"
+              }, {
+                "id" : "buyingPower",
+                "title" : "Buying Power"
+              } ]
+            } ],
+            "items" : {
+              "$ref" : "#/components/schemas/AccountManagerTable"
+            }
+          },
+          "durations" : {
+            "type" : "array",
+            "description" : "Localized array of durations displayed in Order Ticket.",
+            "items" : {
+              "$ref" : "#/components/schemas/Duration"
+            }
+          },
+          "pullingInterval" : {
+            "$ref" : "#/components/schemas/PullingInterval"
+          }
+        }
+      },
+      "SymbolMapping" : {
+        "type" : "object",
+        "properties" : {
+          "symbols" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/SingleMapping"
+            }
+          },
+          "fields" : {
+            "type" : "array",
+            "description" : "Array with the only one element `['brokerSymbol']`.",
+            "items" : {
+              "$ref" : "#/components/schemas/SingleField"
+            }
+          }
+        },
+        "description" : "Map of Broker instrument names and BSC instrument names.",
+        "example" : {
+          "symbols" : [ {
+            "f" : [ "EURUSD" ],
+            "s" : "FX_IDC:EURUSD"
+          }, {
+            "f" : [ "AAPLE" ],
+            "s" : "NASDAQ:AAPLE"
+          } ],
+          "fields" : [ "brokerSymbol" ]
+        }
+      },
+      "AccountManagerTable" : {
+        "required" : [ "columns", "id", "title" ],
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "example" : "accountSummary"
+          },
+          "title" : {
+            "type" : "string",
+            "description" : "Localized title of a table.",
+            "example" : "Account Summary"
+          },
+          "columns" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/AccountManagerColumn"
+            }
+          }
+        }
+      },
+      "AccountManagerColumn" : {
+        "required" : [ "id", "title" ],
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "example" : "balance"
+          },
+          "title" : {
+            "type" : "string",
+            "description" : "Localized title of a column.",
+            "example" : "Balance"
+          },
+          "tooltip" : {
+            "type" : "string",
+            "description" : "Tooltip that is shown on mouse hover.",
+            "example" : "Balance column"
+          },
+          "fixedWidth" : {
+            "type" : "boolean",
+            "description" : "Set it to true if data length is frequently changed.",
+            "example" : true
+          },
+          "sortable" : {
+            "type" : "boolean",
+            "description" : "Set it to false if this columns data should not be sortable.",
+            "example" : false
+          }
+        }
+      },
+      "Duration" : {
+        "required" : [ "id", "title" ],
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "description" : "Duration identifier.",
+            "example" : "GTT"
+          },
+          "title" : {
+            "type" : "string",
+            "description" : "Localized title.",
+            "example" : "Good Till Time"
+          },
+          "hasDatePicker" : {
+            "type" : "boolean",
+            "description" : "Display date control in Order Ticket for this duration type.",
+            "example" : true
+          },
+          "hasTimePicker" : {
+            "type" : "boolean",
+            "description" : "Display time control in Order Ticket for this duration type.",
+            "example" : true
+          }
+        },
+        "description" : "Single duration option."
+      },
+      "PullingInterval" : {
+        "type" : "object",
+        "properties" : {
+          "history" : {
+            "type" : "number",
+            "description" : "Time interval in milliseconds to request chart real-time bar updates. The default value is `500` ms.\n",
+            "example" : 300
+          },
+          "quotes" : {
+            "type" : "number",
+            "description" : "Time interval in milliseconds to request quote updates. The default value is `500` ms.\n",
+            "example" : 3000
+          },
+          "orders" : {
+            "type" : "number",
+            "description" : "Time interval in milliseconds to request orders. The default value is `500` ms.\n",
+            "example" : 300
+          },
+          "positions" : {
+            "type" : "number",
+            "description" : "Time interval in milliseconds to request positions. The default value is `1000` ms.\n",
+            "example" : 300
+          },
+          "accountManager" : {
+            "type" : "number",
+            "description" : "Time interval in milliseconds to update Account Manager tables. The default value is `500` ms.\n",
+            "example" : 300
+          }
+        },
+        "description" : "Time intervals in milliseconds to pull data from the server.\n"
+      },
+      "SingleField" : {
+        "type" : "string",
+        "description" : "Constant. Set it to `brokerSymbol`.",
+        "example" : "brokerSymbol",
+        "enum" : [ "brokerSymbol" ]
+      },
+      "SingleMapping" : {
+        "type" : "object",
+        "properties" : {
+          "f" : {
+            "type" : "array",
+            "description" : "An array with the only one string element &ndash; broker symbol name.",
+            "items" : {
+              "type" : "string",
+              "example" : "EURUSD"
+            }
+          },
+          "s" : {
+            "type" : "string",
+            "description" : "BSC symbol name with prefix (AA:XXXX).",
+            "example" : "FX_IDC:EURUSD"
+          }
+        },
+        "description" : "Map of Broker instrument name to BSC instrument name."
+      },
+      "Account" : {
+        "required" : [ "config", "id", "name" ],
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "description" : "Unique account identifier.",
+            "example" : "ACC-001"
+          },
+          "name" : {
+            "type" : "string",
+            "description" : "Account title that is displayed to a user.",
+            "example" : "Demo trading account"
+          },
+          "currency" : {
+            "type" : "string",
+            "description" : "Abbreviation of account currency.",
+            "example" : "JPY"
+          },
+          "currencySign" : {
+            "type" : "string",
+            "description" : "Account currency symbol.",
+            "example" : "¥"
+          },
+          "config" : {
+            "$ref" : "#/components/schemas/AccountFlags"
+          }
+        }
+      },
+      "AccountFlags" : {
+        "type" : "object",
+        "properties" : {
+          "showQuantityInsteadOfAmount" : {
+            "type" : "boolean",
+            "description" : "Renames Amount to Quantity in the Order Ticket."
+          },
+          "supportDOM" : {
+            "type" : "boolean",
+            "description" : "Whether you want for DOM (Depth of market) widget to be available."
+          },
+          "supportBrackets" : {
+            "type" : "boolean",
+            "description" : "Whether you support brackets. Deprecated. Use supportOrderBrackets and supportPositionBrackets instead.",
+            "deprecated" : true
+          },
+          "supportOrderBrackets" : {
+            "type" : "boolean",
+            "description" : "Whether you support adding (or modifying) stop loss and take profit to orders."
+          },
+          "supportPositionBrackets" : {
+            "type" : "boolean",
+            "description" : "Whether you support adding (or modifying) stop loss and take profit to positions."
+          },
+          "supportClosePosition" : {
+            "type" : "boolean",
+            "description" : "Whether you support closing of a position without a need for a user to fill an order.\n"
+          },
+          "supportEditAmount" : {
+            "type" : "boolean",
+            "description" : "Whether you support editing orders quantity. If you set it to `false`,\nthe quantity control in the order ticket will be disabled when\nmodifying an order.\n"
+          },
+          "supportLevel2Data" : {
+            "type" : "boolean",
+            "description" : "Whether you support Level 2 data. It is required to display DOM levels. You must implement\n[/streaming](/rest-api-spec/#operation/streaming) to display DOM.\n"
+          },
+          "supportMultiposition" : {
+            "type" : "boolean",
+            "description" : "Whether you support multiple positions at one instrument at the same time.\n"
+          },
+          "supportPLUpdate" : {
+            "type" : "boolean",
+            "description" : "Whether you provide `unrealizedPl` for positions. Otherwise P&L will\nbe calculated automatically based on a simple algorithm.\n"
+          },
+          "supportReducePosition" : {
+            "type" : "boolean",
+            "description" : "Reserved for future use."
+          },
+          "supportStopLimitOrders" : {
+            "type" : "boolean",
+            "description" : "Whether you support StopLimit orders."
+          },
+          "supportOrdersHistory" : {
+            "type" : "boolean",
+            "description" : "Whether you support [/ordersHistory](/rest-api-spec/#operation/getOrdersHistory) request."
+          },
+          "supportExecutions" : {
+            "type" : "boolean",
+            "description" : "Whether you support [/executions](/rest-api-spec/#operation/getExecutions) request."
+          },
+          "supportDigitalSignature" : {
+            "type" : "boolean",
+            "description" : "Whether you support Digital signature input field in the Order Ticket."
+          },
+          "supportBalances" : {
+            "type" : "boolean",
+            "description" : "Whether you support [/balances](/rest-api-spec/#operation/getBalances) request"
+          }
+        }
+      },
+      "AccountState" : {
+        "required" : [ "balance", "unrealizedPl" ],
+        "type" : "object",
+        "properties" : {
+          "balance" : {
+            "type" : "number",
+            "description" : "Account Balance."
+          },
+          "unrealizedPl" : {
+            "type" : "number",
+            "description" : "Unrealized profit/loss."
+          },
+          "equity" : {
+            "type" : "number",
+            "description" : "Equity."
+          },
+          "amData" : {
+            "type" : "array",
+            "description" : "Account Manager data. Structure of Account Manager is defined by the\n[/config](#operation/getConfiguration) endpoint. Each element of this array is a table.\n",
+            "items" : {
+              "type" : "array",
+              "description" : "Single Account Manager table data. Each element of this array is a table row.\n",
+              "items" : {
+                "type" : "array",
+                "description" : "Account Manager table rows data. Each element of this array is a table cell.\n",
+                "items" : {
+                  "type" : "string"
+                }
+              }
+            }
+          }
+        },
+        "example" : {
+          "balance" : 41757.91,
+          "unrealizedPl" : 1053.02,
+          "equity" : 42857.56,
+          "amData" : [ [ [ "90.22", "42857.56", "42857.56", "1099.65", "0.00", "41757.91" ] ] ]
+        }
+      },
+      "OrderCommon" : {
+        "required" : [ "id", "instrument", "qty", "side", "type" ],
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "description" : "Unique identifier."
+          },
+          "instrument" : {
+            "type" : "string",
+            "description" : "Instrument name that is used on a broker's side."
+          },
+          "qty" : {
+            "type" : "number",
+            "description" : "Quantity."
+          },
+          "side" : {
+            "type" : "string",
+            "description" : "Side.",
+            "enum" : [ "buy", "sell" ]
+          },
+          "type" : {
+            "type" : "string",
+            "description" : "Type.",
+            "enum" : [ "market", "stop", "limit", "stoplimit" ]
+          },
+          "filledQty" : {
+            "type" : "number",
+            "description" : "Filled quantity."
+          },
+          "avgPrice" : {
+            "type" : "number",
+            "description" : "Average price of order fills. It should be provided for filled / partly filled orders.\n"
+          },
+          "limitPrice" : {
+            "type" : "number",
+            "description" : "Limit Price for Limit or StopLimit order."
+          },
+          "stopPrice" : {
+            "type" : "number",
+            "description" : "Stop Price for Stop or StopLimit order."
+          },
+          "parentId" : {
+            "type" : "string",
+            "description" : "Identifier of a parent order or a parent position (for position brackets) depending on `parentType`.\nShould be set only for bracket orders.\n"
+          },
+          "parentType" : {
+            "type" : "string",
+            "description" : "Type of order's parent. Should be set only for bracket orders.",
+            "enum" : [ "order", "position" ]
+          },
+          "duration" : {
+            "$ref" : "#/components/schemas/OrderCommon_duration"
+          }
+        }
+      },
+      "OrderStatus" : {
+        "required" : [ "status" ],
+        "type" : "object",
+        "properties" : {
+          "status" : {
+            "type" : "string",
+            "description" : "String constants to describe an order status.\n\n`Status`  | Description\n----------|-------------\nplacing   | order is not created on a broker's side yet\ninactive  | bracket order is created but waiting for a base order to be filled\nworking   | order is created but not executed yet\nrejected  | order is rejected for some reason\nfilled    | order is fully executed\ncancelled  | order is cancelled\n",
+            "enum" : [ "placing", "inactive", "working", "rejected", "filled", "cancelled" ]
+          }
+        },
+        "example" : "working"
+      },
+      "OrderHistoryStatus" : {
+        "required" : [ "status" ],
+        "type" : "object",
+        "properties" : {
+          "status" : {
+            "type" : "string",
+            "description" : "String constants to describe a final order status.\n\n`Status`  | Description\n----------|-------------\nrejected  | order is rejected for some reason\nfilled    | order is fully executed\ncancelled  | order is cancelled\n",
+            "enum" : [ "rejected", "filled", "cancelled" ]
+          }
+        }
+      },
+      "Order" : {
+        "allOf" : [ {
+          "$ref" : "#/components/schemas/OrderCommon"
+        }, {
+          "$ref" : "#/components/schemas/OrderStatus"
+        } ]
+      },
+      "OrderHistory" : {
+        "allOf" : [ {
+          "$ref" : "#/components/schemas/OrderCommon"
+        }, {
+          "$ref" : "#/components/schemas/OrderHistoryStatus"
+        } ]
+      },
+      "Position" : {
+        "required" : [ "avgPrice", "id", "instrument", "qty", "side", "unrealizedPl" ],
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "description" : "Unique identifier.",
+            "example" : "1"
+          },
+          "instrument" : {
+            "type" : "string",
+            "description" : "Instrument name that is used on a broker's side.",
+            "example" : "EURUSD"
+          },
+          "qty" : {
+            "type" : "number",
+            "description" : "Quantity.",
+            "example" : 1
+          },
+          "side" : {
+            "type" : "string",
+            "description" : "Side.",
+            "example" : "buy",
+            "enum" : [ "buy", "sell" ]
+          },
+          "avgPrice" : {
+            "type" : "number",
+            "description" : "Average price of position trades.",
+            "example" : 1.1347091
+          },
+          "unrealizedPl" : {
+            "type" : "number",
+            "description" : "Unrealized (open) profit/loss.",
+            "example" : 19.4739
+          }
+        }
+      },
+      "Execution" : {
+        "required" : [ "id", "instrument", "price", "qty", "side", "time" ],
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "description" : "Unique identifier.",
+            "example" : "EX34567"
+          },
+          "instrument" : {
+            "type" : "string",
+            "description" : "Instrument id.",
+            "example" : "EURUSD"
+          },
+          "price" : {
+            "type" : "number",
+            "description" : "Execution price.",
+            "example" : 1.23564
+          },
+          "time" : {
+            "type" : "number",
+            "description" : "Execution time.",
+            "example" : 1548406235
+          },
+          "qty" : {
+            "type" : "number",
+            "description" : "Execution quantity.",
+            "example" : 1
+          },
+          "side" : {
+            "type" : "string",
+            "description" : "Side.",
+            "example" : "buy",
+            "enum" : [ "buy", "sell" ]
+          }
+        }
+      },
+      "Instrument" : {
+        "required" : [ "description", "name" ],
+        "type" : "object",
+        "properties" : {
+          "name" : {
+            "type" : "string",
+            "description" : "Broker instrument name.",
+            "example" : "EURUSD"
+          },
+          "description" : {
+            "type" : "string",
+            "description" : "Instrument description.",
+            "example" : "EUR/USD "
+          },
+          "minQty" : {
+            "type" : "number",
+            "description" : "Minimum quantity for trading.",
+            "example" : 1
+          },
+          "maxQty" : {
+            "type" : "number",
+            "description" : "Maximum quantity for trading.",
+            "example" : 100000000
+          },
+          "qtyStep" : {
+            "type" : "number",
+            "description" : "Quantity step.",
+            "example" : 100
+          },
+          "pipSize" : {
+            "type" : "number",
+            "description" : "Size of 1 pip.\nIt is equal to `minTick` for non-forex symbols. For forex pairs it equals either the `minTick`,\nor the `minTick` multiplied by `10`. For example, for EURCAD `minTick` is `0.00001` and `pipSize` is `0.0001`.\n",
+            "example" : 1.0E-4
+          },
+          "pipValue" : {
+            "type" : "number",
+            "description" : "Value of 1 pip in the account currency, i.e. profit of the long position with a size of one lot,\nwhen the contract's price is changed by +1 pip.\n",
+            "example" : 8.845E-5
+          },
+          "minTick" : {
+            "type" : "number",
+            "description" : "Minimum price movement.",
+            "example" : 1.0E-5
+          },
+          "lotSize" : {
+            "type" : "number",
+            "description" : "Size of 1 lot.",
+            "example" : 10
+          },
+          "baseCurrency" : {
+            "type" : "string",
+            "description" : "The first currency quoted in a currency pair. Used for crypto currencies only."
+          },
+          "quoteCurrency" : {
+            "type" : "string",
+            "description" : "A quote currency is the second currency quoted in a currency pair. Used for crypto currencies only.\n"
+          },
+          "type" : {
+            "type" : "string",
+            "description" : "Symbol type (forex/stock etc.).",
+            "example" : "forex",
+            "enum" : [ "stock", "fund", "dr", "right", "bond", "warrant", "structured", "index", "forex", "futures", "crypto" ]
+          }
+        }
+      },
+      "Permissions" : {
+        "required" : [ "groups" ],
+        "type" : "object",
+        "properties" : {
+          "groups" : {
+            "type" : "array",
+            "description" : "Groups list. Each element of this array is an group identifier.",
+            "items" : {
+              "type" : "string",
+              "description" : "Each element of this array is an group identifier.\n",
+              "example" : "broker_stocks"
+            }
+          }
+        }
+      },
+      "Balance" : {
+        "required" : [ "available", "symbol", "total" ],
+        "type" : "object",
+        "properties" : {
+          "symbol" : {
+            "type" : "string",
+            "description" : "Crypto currency symbol.",
+            "example" : "BTC"
+          },
+          "longName" : {
+            "type" : "string",
+            "description" : "Crypto currency name.",
+            "example" : "Bitcoin"
+          },
+          "total" : {
+            "type" : "number",
+            "description" : "Total amount of the balance.",
+            "example" : 1000
+          },
+          "available" : {
+            "type" : "number",
+            "description" : "The balance available to the user.",
+            "example" : 10
+          },
+          "btcValue" : {
+            "type" : "number",
+            "description" : "Total amount of the balance in BTC.",
+            "example" : 1000
+          }
+        }
+      },
+      "SingleQuote" : {
+        "type" : "object",
+        "properties" : {
+          "ch" : {
+            "type" : "number",
+            "description" : "Change (displayed in Watch and Detail).",
+            "example" : 0.00762
+          },
+          "chp" : {
+            "type" : "number",
+            "description" : "Change percent (displayed in Watch and Detail).",
+            "example" : 0.6739
+          },
+          "lp" : {
+            "type" : "number",
+            "description" : "Last price.",
+            "example" : 1.13835
+          },
+          "ask" : {
+            "type" : "number",
+            "description" : "Ask price.",
+            "example" : 1.13836
+          },
+          "bid" : {
+            "type" : "number",
+            "description" : "Bid price.",
+            "example" : 1.13834
+          },
+          "open_price" : {
+            "type" : "number",
+            "description" : "Open.",
+            "example" : 0
+          },
+          "high_price" : {
+            "type" : "number",
+            "description" : "High price.",
+            "example" : 1.13854
+          },
+          "low_price" : {
+            "type" : "number",
+            "description" : "Low price.",
+            "example" : 1.13009
+          },
+          "prev_close_price" : {
+            "type" : "number",
+            "description" : "Previous close price.",
+            "example" : 1.13073
+          },
+          "volume" : {
+            "type" : "number",
+            "description" : "Volume.",
+            "example" : 0
+          }
+        },
+        "description" : "Price data for an instrument."
+      },
+      "DepthItem" : {
+        "type" : "array",
+        "description" : "Array with two numeric elements - price and volume.",
+        "items" : {
+          "type" : "number"
+        }
+      },
+      "Depth" : {
+        "required" : [ "asks", "bids" ],
+        "type" : "object",
+        "properties" : {
+          "asks" : {
+            "type" : "array",
+            "description" : "Array of arrays with two numeric elements - price and volume. Must be sorted by `price` in asc order.",
+            "items" : {
+              "type" : "array",
+              "items" : {
+                "$ref" : "#/components/schemas/DepthItem"
+              }
+            }
+          },
+          "bids" : {
+            "type" : "array",
+            "description" : "Array of arrays with two numeric elements - price and volume. Must be sorted by `price` in asc order.",
+            "items" : {
+              "type" : "array",
+              "items" : {
+                "$ref" : "#/components/schemas/DepthItem"
+              }
+            }
+          }
+        },
+        "description" : "Depth of market for an instrument.",
+        "example" : {
+          "asks" : [ [ 45.1, 100 ], [ 48.4, 120 ] ],
+          "bids" : [ [ 24.7, 80 ], [ 35.6, 30 ] ]
+        }
+      },
+      "GroupList" : {
+        "required" : [ "groups" ],
+        "type" : "object",
+        "properties" : {
+          "groups" : {
+            "type" : "array",
+            "description" : "Groups list. Each element of this array is an group object.",
+            "items" : {
+              "$ref" : "#/components/schemas/GroupList_groups"
+            }
+          }
+        }
+      },
+      "SymbolInfoArrays" : {
+        "required" : [ "currency", "description", "exchange-listed", "exchange-traded", "minmovement", "pricescale", "session-regular", "symbol", "timezone", "type" ],
+        "type" : "object",
+        "properties" : {
+          "symbol" : {
+            "type" : "array",
+            "description" : "This is the name of the symbol - a string that the users will see. It should contain uppercase letters,\nnumbers, a dot or an underscore. Also, it will be used for data requests if you are not using tickers.\n",
+            "example" : [ "VIXG2019", "AAPLE", "EURUSD" ],
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "description" : {
+            "type" : "array",
+            "description" : "Description of a symbol. Will be displayed in the chart legend for this symbol.\n",
+            "example" : [ "Volatility Index", "Apple Inc", "EUR/USD" ],
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "currency" : {
+            "type" : "array",
+            "description" : "Symbol currency, also named as counter currency. If a symbol is a currency pair, then the currency field has\nto contain the second currency of this pair. For example, `USD` is a currency for `EURUSD` ticker.\nFiat currency must meet the ISO 4217 standard.\nThe default value is `null`.\n",
+            "example" : "USD",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "base-currency" : {
+            "type" : "array",
+            "description" : "For currency pairs only. This field contains the first currency of the pair. For example, base currency for\n`EURUSD` ticker is `EUR`. Fiat currency must meet the ISO 4217 standard.\nThe default value is `null`.\n",
+            "example" : [ null, null, "EUR" ],
+            "items" : {
+              "type" : "string",
+              "nullable" : true
+            }
+          },
+          "exchange-listed" : {
+            "type" : "array",
+            "description" : "Short name of exchange where this symbol is listed.",
+            "example" : [ "CBOE", "NASDAQ", "FOREX" ],
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "exchange-traded" : {
+            "type" : "array",
+            "description" : "Short name of exchange where this symbol is traded.",
+            "example" : [ "CBOE", "NASDAQ", "FOREX" ],
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "minmovement" : {
+            "type" : "array",
+            "description" : "Minimal integer price change.",
+            "example" : [ 1, 1, 1 ],
+            "items" : {
+              "type" : "number"
+            }
+          },
+          "minmov2" : {
+            "type" : "array",
+            "description" : "This is a number for complex price formatting cases. The default value is `0`.",
+            "example" : [ 0, 0, 0 ],
+            "items" : {
+              "type" : "number"
+            }
+          },
+          "fractional" : {
+            "type" : "array",
+            "description" : "Boolean showing whether this symbol wants to have complex price\nformatting (see `minmov2`) or not. The default value is `false`.\n",
+            "example" : [ false, false, false ],
+            "items" : {
+              "type" : "boolean"
+            }
+          },
+          "pricescale" : {
+            "type" : "array",
+            "description" : "Indicates how many decimal points the price has. For example, if the price has 2 decimal points (ex., 300.01),\nthen `pricescale` is `100`. If it has 3 decimals, then `pricescale` is `1000` etc. If the price doesn't have decimals,\nset `pricescale` to `1`.\n",
+            "example" : [ 100, 100, 100000 ],
+            "items" : {
+              "type" : "number"
+            }
+          },
+          "root" : {
+            "type" : "array",
+            "description" : "Root of the features. It's required for futures symbol types only.\nProvide a null value for other symbol types. The default value is `null`.\n",
+            "example" : [ "VIX", null, null ],
+            "items" : {
+              "type" : "string",
+              "nullable" : true
+            }
+          },
+          "root-description" : {
+            "type" : "array",
+            "description" : "Short description of the futures root that will be displayed in the symbol search.\nIt's required for futures only. Provide a null value for other symbol types.\nThe default value is `null`.\n",
+            "example" : [ "Volatility Index", null, null ],
+            "items" : {
+              "type" : "string",
+              "nullable" : true
+            }
+          },
+          "has-intraday" : {
+            "type" : "array",
+            "description" : "Boolean value showing whether the symbol includes intraday (minutes)\nhistorical data. If it's `false` then all buttons for intraday resolutions\nwill be disabled for this particular symbol. If it is set to `true`, all\nresolutions that are supplied directly by the datafeed must be provided\nin `intraday_multipliers` array. The default value is `true`.\n",
+            "example" : [ true, true, true ],
+            "items" : {
+              "type" : "boolean"
+            }
+          },
+          "has-no-volume" : {
+            "type" : "array",
+            "description" : "Boolean showing whether the symbol includes volume data or not. The default value is `false`.",
+            "example" : [ false, false, true ],
+            "items" : {
+              "type" : "boolean"
+            }
+          },
+          "type" : {
+            "type" : "array",
+            "description" : "Symbol type (forex/stock etc.).",
+            "example" : [ "futures", "stock", "forex" ],
+            "items" : {
+              "type" : "string",
+              "enum" : [ "stock", "fund", "dr", "right", "bond", "warrant", "structured", "index", "forex", "futures", "crypto" ]
+            }
+          },
+          "ticker" : {
+            "type" : "array",
+            "description" : "This is a unique identifier for this particular symbol in your symbology.\nIf you specify this property then its value will be used for all data requests for this symbol.\n",
+            "example" : [ "VIXG2019", "AAPLE", "EURUSD" ],
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "timezone" : {
+            "type" : "array",
+            "description" : "Timezone of the exchange for this symbol. We expect to get the name of the time zone in olsondb format.\n",
+            "example" : [ "America/New_York", "America/New_York", "America/New_York" ],
+            "items" : {
+              "type" : "string",
+              "enum" : [ "America/New_York", "America/Los_Angeles", "America/Chicago", "America/Phoenix", "America/Toronto", "America/Vancouver", "America/Argentina/Buenos_Aires", "America/El_Salvador", "America/Sao_Paulo", "America/Bogota", "Europe/Moscow", "Europe/Athens", "Europe/Berlin", "Europe/London", "Europe/Madrid", "Europe/Paris", "Europe/Warsaw", "Australia/Sydney", "Australia/Brisbane", "Australia/Adelaide", "Australia/ACT", "Asia/Almaty", "Asia/Ashkhabad", "Asia/Tokyo", "Asia/Taipei", "Asia/Singapore", "Asia/Shanghai", "Asia/Seoul", "Asia/Tehran", "Asia/Dubai", "Asia/Kolkata", "Asia/Hong_Kong", "Asia/Bangkok", "Pacific/Auckland", "Pacific/Chatham", "Pacific/Fakaofo", "Pacific/Honolulu", "America/Mexico_City", "Africa/Johannesburg", "Asia/Kathmandu", "US/Mountain" ]
+            }
+          },
+          "session-regular" : {
+            "type" : "array",
+            "description" : "Session time format is HHMM-HHMM. E.g., a session that starts at 9:30 am and ends at 4:00 pm should look like `0930-1600`.\nThere is a special case for symbols traded 24/7 (e.g., Bitcoin and other cryptocurrencies): the session string should be `24x7`.\nTo specify an overnight session set start time greater than end time (ie, `1700-0900`).\nSession time is expected to be in exchange time zone.\n",
+            "example" : [ "0000-2359:23456", "0930-1600", "1700-1700" ],
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "session-extended" : {
+            "type" : "array",
+            "description" : "An extended session, includes `session-premarket` and `session-postmarket`.\nThe start time should be earlier or be equal to the start time of the `session-regular`\nand be equal to the start time of the `session-premarket` if it exists.\n",
+            "example" : [ "0000-2359:23456", "0400-2000", "1700-1700" ],
+            "items" : {
+              "type" : "string",
+              "nullable" : true
+            }
+          },
+          "session-premarket" : {
+            "type" : "array",
+            "description" : "An additional session before `session-regular`. The start time should be equal to the start time of the `session-extended`.\nThe end time should be equal or less than the start time of the `session-regular`.\n",
+            "example" : [ null, "0400-0930", null ],
+            "items" : {
+              "type" : "string",
+              "nullable" : true
+            }
+          },
+          "session-postmarket" : {
+            "type" : "array",
+            "description" : "An additional session after the `session-regular`. The start time should be equal or greater\nthan the end time of the `session-regular`. The end time should be equal to the end time of the `session-extended`.\n",
+            "example" : [ null, "1600-2000", null ],
+            "items" : {
+              "type" : "string",
+              "nullable" : true
+            }
+          },
+          "supported-resolutions" : {
+            "type" : "array",
+            "description" : "An array of resolutions which should be enabled in resolutions picker\nfor this symbol. Each item of an array is expected to be a string.\nThe default value is an empty array.\n",
+            "example" : [ [ "1", "3", "5", "15", "30", "60", "240", "D", "W" ], [ "1", "3", "5", "15", "30", "60", "240", "D", "W" ], [ "1", "3", "5", "15", "30", "60", "240", "D", "W" ] ],
+            "items" : {
+              "type" : "array",
+              "items" : {
+                "type" : "string"
+              }
+            }
+          },
+          "has-daily" : {
+            "type" : "array",
+            "description" : "The boolean value showing whether data feed has its own daily\nresolution bars or not. If `has_daily` = `false` then Charting Library\nwill build the respective resolutions using 1-minute bars by itself.\nIf not, then it will request those bars from the data feed.\nThe default value is `true`.\n",
+            "example" : [ true, true, true ],
+            "items" : {
+              "type" : "boolean"
+            }
+          },
+          "intraday-multipliers" : {
+            "type" : "array",
+            "description" : "This is an array containing intraday resolutions (in minutes) that the data feed may provide.\nE.g., if the data feed supports resolutions such as `[\"1\", \"5\", \"15\"]`, but has 1-minute bars\nfor some symbols then you should set `intraday_multipliers` of this symbol to `[1]`. This will\nmake Charting Library build 5 and 15-minute resolutions by itself.\nThe default value is an empty array.\n",
+            "example" : [ [ "1", "3", "5", "15", "30", "60", "240" ], [ "1", "3", "5", "15", "30", "60", "240" ], [ "1", "3", "5", "15", "30", "60", "240" ] ],
+            "items" : {
+              "type" : "array",
+              "items" : {
+                "type" : "string"
+              }
+            }
+          },
+          "has-weekly-and-monthly" : {
+            "type" : "array",
+            "description" : "The boolean value showing whether data feed has its own weekly\nand monthly resolution bars or not. If `has_weekly_and_monthly` = `false`\nthen Charting Library will build the respective resolutions using daily\nbars by itself. If not, then it will request those bars from the data feed.\nThe default value is `false`.\n",
+            "example" : [ false, false, false ],
+            "items" : {
+              "type" : "boolean"
+            }
+          },
+          "pointvalue" : {
+            "type" : "array",
+            "description" : "The currency value of a single whole unit price change in the instrument's currency.\nIf the value is not provided it is assumed to be `1`.\n",
+            "example" : [ 10, 1, 1.0E-5 ],
+            "items" : {
+              "type" : "number"
+            }
+          },
+          "expiration" : {
+            "type" : "array",
+            "description" : "Expiration of the futures in the following format: YYYYMMDD. Required for futures type symbols only.\nThe default value is `null`.\n",
+            "example" : [ 20190213, null, null ],
+            "items" : {
+              "type" : "number",
+              "nullable" : true
+            }
+          },
+          "bar-source" : {
+            "type" : "array",
+            "description" : "The principle of building bars. The default value is `trade`.",
+            "example" : [ "trade", "bid", "ask" ],
+            "items" : {
+              "type" : "string",
+              "enum" : [ "bid", "ask", "mid", "trade" ]
+            }
+          },
+          "bar-transform" : {
+            "type" : "array",
+            "description" : "The principle of bar alignment. The default value is `none`.",
+            "example" : [ "openprev", "openprev", "none" ],
+            "items" : {
+              "type" : "string",
+              "enum" : [ "none", "openprev", "prevopen" ]
+            }
+          },
+          "bar-fillgaps" : {
+            "type" : "array",
+            "description" : "Is used to create the zero-volume bars in the absence of any trades\n(i.e. bars with zero volume and equal OHLC values ).\nThe default value is `false`.\n",
+            "example" : [ "true", "true", "false" ],
+            "items" : {
+              "type" : "boolean"
+            }
+          }
+        },
+        "description" : "SymbolInfo is an object containing symbols metadata. Each value of this  object is an array of values which\nsize is equal to symbols count or a single value that is applied to all symbols.\nYou can use a single value for all fields except for `supported-resolutions` and `intraday-multipliers`.\n"
+      },
+      "BarsArrays" : {
+        "required" : [ "c", "h", "l", "o", "t", "v" ],
+        "type" : "object",
+        "properties" : {
+          "t" : {
+            "type" : "array",
+            "description" : "Bar time, unix timestamp (UTC). Daily bars should only have the date\npart, time should be 0.\n",
+            "example" : [ 1547942400, 1547942460, 1547942520 ],
+            "items" : {
+              "type" : "number"
+            }
+          },
+          "o" : {
+            "type" : "array",
+            "description" : "Open price.",
+            "example" : [ 3667, 3662.25, 3664.29 ],
+            "items" : {
+              "type" : "number"
+            }
+          },
+          "h" : {
+            "type" : "array",
+            "description" : "High price.",
+            "example" : [ 3667.24, 3664.47, 3664.3 ],
+            "items" : {
+              "type" : "number"
+            }
+          },
+          "l" : {
+            "type" : "array",
+            "description" : "Low price.",
+            "example" : [ 3661.55, 3661.9, 3662.43 ],
+            "items" : {
+              "type" : "number"
+            }
+          },
+          "c" : {
+            "type" : "array",
+            "description" : "Close price.",
+            "example" : [ 3662.25, 3663.13, 3664.01 ],
+            "items" : {
+              "type" : "number"
+            }
+          },
+          "v" : {
+            "type" : "array",
+            "description" : "Volume.",
+            "example" : [ 34.7336, 2.4413, 11.7075 ],
+            "items" : {
+              "type" : "number"
+            }
+          }
+        },
+        "description" : "Bars data."
+      },
+      "StreamingAskItemType" : {
+        "type" : "object",
+        "properties" : {
+          "f" : {
+            "type" : "string",
+            "description" : "Should always be `a`.",
+            "example" : "a"
+          }
+        },
+        "description" : "Ask"
+      },
+      "StreamingBidItemType" : {
+        "type" : "object",
+        "properties" : {
+          "f" : {
+            "type" : "string",
+            "description" : "Should always be `b`.",
+            "example" : "b"
+          }
+        },
+        "description" : "Bid"
+      },
+      "StreamingTradeItemType" : {
+        "type" : "object",
+        "properties" : {
+          "f" : {
+            "type" : "string",
+            "description" : "Should always be `t`.",
+            "example" : "t"
+          }
+        },
+        "description" : "Trade"
+      },
+      "StreamingDailyBarType" : {
+        "type" : "object",
+        "properties" : {
+          "f" : {
+            "type" : "string",
+            "description" : "Should always be `d`.",
+            "example" : "d"
+          }
+        },
+        "description" : "Daily Bar"
+      },
+      "StreamingAskBidTradeItem" : {
+        "required" : [ "id", "p", "t" ],
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "description" : "Symbol",
+            "example" : "EURUSD"
+          },
+          "p" : {
+            "type" : "number",
+            "description" : "Price.",
+            "example" : 1.47245
+          },
+          "s" : {
+            "type" : "number",
+            "description" : "Size.",
+            "example" : 100
+          },
+          "t" : {
+            "type" : "number",
+            "description" : "UNIX time UTC.",
+            "example" : 1547942400
+          }
+        },
+        "description" : "Ask or Bid."
+      },
+      "body" : {
+        "required" : [ "login", "password" ],
+        "type" : "object",
+        "properties" : {
+          "login" : {
+            "type" : "string",
+            "description" : "User login."
+          },
+          "password" : {
+            "type" : "string",
+            "description" : "User password."
+          },
+          "2faCode" : {
+            "type" : "string",
+            "description" : "Two Factor Authentication Code for the second `/authorize` request,\nif the `2fa_required` flag was set in the first request.\n"
+          }
+        }
+      },
+      "body_1" : {
+        "required" : [ "instrument", "qty", "side", "type" ],
+        "type" : "object",
+        "properties" : {
+          "instrument" : {
+            "type" : "string",
+            "description" : "Instrument to open the order on.",
+            "example" : "EURUSD"
+          },
+          "qty" : {
+            "type" : "number",
+            "description" : "The number of units to open order for.",
+            "example" : 1
+          },
+          "side" : {
+            "type" : "string",
+            "description" : "Side.",
+            "example" : "buy",
+            "enum" : [ "buy", "sell" ]
+          },
+          "type" : {
+            "type" : "string",
+            "description" : "Type.",
+            "example" : "limit",
+            "enum" : [ "market", "stop", "limit", "stoplimit" ]
+          },
+          "limitPrice" : {
+            "type" : "number",
+            "description" : "Limit Price for Limit or StopLimit order.",
+            "example" : 1.23456
+          },
+          "stopPrice" : {
+            "type" : "number",
+            "description" : "Stop Price for Stop or StopLimit order."
+          },
+          "durationType" : {
+            "type" : "string",
+            "description" : "Duration ID (if supported).",
+            "example" : "gtt"
+          },
+          "durationDateTime" : {
+            "type" : "number",
+            "description" : "Expiration datetime UNIX timestamp (if supported by duration type).",
+            "example" : 1548406235
+          },
+          "stopLoss" : {
+            "type" : "number",
+            "description" : "StopLoss price (if supported)."
+          },
+          "takeProfit" : {
+            "type" : "number",
+            "description" : "TakeProfit price (if supported)."
+          },
+          "digitalSignature" : {
+            "type" : "string",
+            "description" : "Digital signature (if supported).",
+            "example" : "954345868"
+          }
+        }
+      },
+      "body_2" : {
+        "required" : [ "qty" ],
+        "properties" : {
+          "qty" : {
+            "type" : "number",
+            "description" : "The number of units to open order for.",
+            "example" : 2
+          },
+          "limitPrice" : {
+            "type" : "number",
+            "description" : "Limit Price for Limit or StopLimit order."
+          },
+          "stopPrice" : {
+            "type" : "number",
+            "description" : "Stop Price for Stop or StopLimit order."
+          },
+          "durationType" : {
+            "type" : "string",
+            "description" : "Duration ID (if supported)."
+          },
+          "durationDateTime" : {
+            "type" : "number",
+            "description" : "Expiration datetime UNIX timestamp (if supported by duration type)."
+          },
+          "stopLoss" : {
+            "type" : "number",
+            "description" : "StopLoss price (if supported)."
+          },
+          "takeProfit" : {
+            "type" : "number",
+            "description" : "TakeProfit price (if supported)."
+          },
+          "digitalSignature" : {
+            "type" : "string",
+            "description" : "Digital signature (if supported)."
+          },
+          "requestId" : {
+            "$ref" : "#/components/parameters/requestId"
+          }
+        }
+      },
+      "body_3" : {
+        "type" : "object",
+        "properties" : {
+          "stopLoss" : {
+            "type" : "number",
+            "description" : "StopLoss price.",
+            "example" : 1.283568
+          },
+          "takeProfit" : {
+            "type" : "number",
+            "description" : "TakeProfit price.",
+            "example" : 1.294436
+          }
+        }
+      },
+      "PostOrderResponse_d" : {
+        "type" : "object",
+        "properties" : {
+          "orderId" : {
+            "type" : "string",
+            "description" : "New order identifier.",
+            "example" : "1"
+          }
+        }
+      },
+      "QuotesResponse_d" : {
+        "required" : [ "n", "s", "v" ],
+        "type" : "object",
+        "properties" : {
+          "s" : {
+            "$ref" : "#/components/schemas/Status"
+          },
+          "n" : {
+            "type" : "string",
+            "description" : "Symbol name. Should be equal to the requested one.",
+            "example" : "EURUSD"
+          },
+          "v" : {
+            "$ref" : "#/components/schemas/SingleQuote"
+          }
+        },
+        "description" : "Price response for an instrument."
+      },
+      "OrderCommon_duration" : {
+        "required" : [ "type" ],
+        "type" : "object",
+        "properties" : {
+          "type" : {
+            "type" : "string",
+            "description" : "Duration ID. Internal ID that you set in [/config](#operation/getConfiguration) response."
+          },
+          "datetime" : {
+            "type" : "number",
+            "description" : "Unit timestamp (UTC)."
+          }
+        },
+        "description" : "Expiration type and UNIX timestamp date/time."
+      },
+      "GroupList_groups" : {
+        "required" : [ "id" ],
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "description" : "All characters in a group id must be either a lowercase alphabetic character or an underscore.\nA group id should start with the same prefix related to the broker's name.\n"
+          }
+        },
+        "description" : "Each element of this array is an group object.\n",
+        "example" : "[{\"id\":\"broker_stocks'\"},{\"id\":\"broker_forex\"}]"
+      }
+    },
+    "parameters" : {
+      "locale" : {
+        "name" : "locale",
+        "in" : "query",
+        "description" : "Locale (language) id.",
+        "required" : true,
+        "style" : "form",
+        "explode" : true,
+        "schema" : {
+          "type" : "string",
+          "enum" : [ "ar", "cs", "de", "el", "en", "es", "fa", "fr", "hu", "it", "ja", "ko", "nl", "pl", "pt", "ro", "ru", "sk", "sv", "th", "tr", "vi", "zh" ]
+        }
+      },
+      "requestId" : {
+        "name" : "requestId",
+        "in" : "query",
+        "description" : "Unique identifier for a request.",
+        "required" : false,
+        "style" : "form",
+        "explode" : true,
+        "schema" : {
+          "type" : "string"
+        },
+        "example" : 23425678343
+      },
+      "accountId" : {
+        "name" : "accountId",
+        "in" : "path",
+        "description" : "Account identifier.",
+        "required" : true,
+        "style" : "simple",
+        "explode" : false,
+        "schema" : {
+          "type" : "string"
+        }
+      },
+      "orderId" : {
+        "name" : "orderId",
+        "in" : "path",
+        "description" : "Order identifier.",
+        "required" : true,
+        "style" : "simple",
+        "explode" : false,
+        "schema" : {
+          "type" : "string"
+        }
+      },
+      "positionId" : {
+        "name" : "positionId",
+        "in" : "path",
+        "description" : "Position identifier.",
+        "required" : true,
+        "style" : "simple",
+        "explode" : false,
+        "schema" : {
+          "type" : "string"
+        }
+      },
+      "group" : {
+        "name" : "group",
+        "in" : "query",
+        "description" : "ID of a symbol group. If it presents then only symbols that belong to this group should be returned.\nPossible values are provided by the [/groups](#operation/getGroups) endpoint.\nIt is only required if you use groups of symbols to restrict access to instrument's data.\n",
+        "required" : false,
+        "style" : "form",
+        "explode" : true,
+        "schema" : {
+          "type" : "string"
+        }
+      },
+      "symbol" : {
+        "name" : "symbol",
+        "in" : "query",
+        "description" : "Symbol name or ticker.",
+        "required" : true,
+        "style" : "form",
+        "explode" : true,
+        "schema" : {
+          "type" : "string"
+        }
+      },
+      "resolution" : {
+        "name" : "resolution",
+        "in" : "query",
+        "description" : "Symbol resolution. Possible resolutions are daily (`D` or `1D`, `2D` ... ),\nweekly (`1W`, `2W` ...), monthly (`1M`, `2M`...) and an intra-day\nresolution &ndash; minutes(`1`, `2` ...).\n",
+        "required" : true,
+        "style" : "form",
+        "explode" : true,
+        "schema" : {
+          "type" : "string"
+        }
+      },
+      "historyFrom" : {
+        "name" : "from",
+        "in" : "query",
+        "description" : "Unix timestamp (UTC) of the leftmost required bar, including `from`.",
+        "required" : true,
+        "style" : "form",
+        "explode" : true,
+        "schema" : {
+          "type" : "number"
+        }
+      },
+      "marksFrom" : {
+        "name" : "from",
+        "in" : "query",
+        "description" : "Unix timestamp (UTC) of the leftmost required mark, including `from`.",
+        "required" : true,
+        "style" : "form",
+        "explode" : true,
+        "schema" : {
+          "type" : "number"
+        }
+      },
+      "historyTo" : {
+        "name" : "to",
+        "in" : "query",
+        "description" : "Unix timestamp (UTC) of the rightmost required bar, including `to`. It can be in the future.\nIn this case, the rightmost required bar is the latest available bar.\n",
+        "required" : true,
+        "style" : "form",
+        "explode" : true,
+        "schema" : {
+          "type" : "number"
+        }
+      },
+      "marksTo" : {
+        "name" : "to",
+        "in" : "query",
+        "description" : "Unix timestamp (UTC) of the rightmost required mark, including `to`.",
+        "required" : true,
+        "style" : "form",
+        "explode" : true,
+        "schema" : {
+          "type" : "number"
+        }
+      },
+      "countback" : {
+        "name" : "countback",
+        "in" : "query",
+        "description" : "Number of bars (higher priority than `from`) starting with `to`. If\n`countback` is set, `from` should be ignored.\n",
+        "required" : false,
+        "style" : "form",
+        "explode" : true,
+        "schema" : {
+          "type" : "number"
+        }
+      }
+    },
+    "securitySchemes" : {
+      "PasswordBearer" : {
+        "type" : "http",
+        "description" : "This flow uses login and password to authenticate a user. Username and password are sent as parameters\nto the [/authorize](/rest-api-spec/#operation/authorize) endpoint.\n\n**Note**: If the broker wants to use the  2 Factor Authentication, then the `2fa_required` flag should be set\nto `true` in the [/authorize](/rest-api-spec/#operation/authorize) response. In this case the user is asked\nto enter an additional 2FA code.\nThis code among with the username and the password is sent to the broker again.\n\nIf the username, password and 2FA code (optional) are valid, then the broker issues an access token\nand returns it in the response. The access token is sent with every request in the Authorization header.\n",
+        "scheme" : "bearer",
+        "bearerFormat" : "Bearer ACCESS_TOKEN"
+      },
+      "OAuth2Bearer" : {
+        "type" : "oauth2",
+        "description" : "BSC is using the implicit flow of OAuth 2. According to the [RFC](https://tools.ietf.org/html/rfc6749),\nthis implies the following:\n  - an access token is passed directly to the user agent as a fragment in redirect_uri;\n  - refresh token is not used;\n\nThe broker provides a client id and an authorization endpoint URI to BSC. BSC provides two redirect URI's\nto the broker: one for the staging environment and another one for the production environment.\n\nBSC sends the authorization request according to [OAuth 2 specification, 4.2.1](https://tools.ietf.org/html/rfc6749#section-4.2.1).\nThe following parameters should be in the query part of the authorization URI:\n  - `response_type` should be `token`;\n  - `client_id` is a constant string provided by the broker;\n  - `redirect_uri` is a known prescribed URI where the access token should be added as a fragment after successful authorization. **Note**: redirect URI should be verified by the broker's OAuth service, and should be whitelisted on the broker's service;\n  - `scope` is set to `general`;\n  - `state`  is a verbatim string the broker should return back to BSC without modifications in the authorization response.\n\nIn case of successful authorization, the OAuth service redirects the user-agent (browser) to `redirect_uri`\nwith the access token added as a fragment, according to https://tools.ietf.org/html/rfc6749#section-4.2.2.\nThe `state` parameter should be passed without modifications.\n\nAfter performing authorization, the access token is sent with every request in the `Authorization` header.\n\nIn order to refresh the access token the broker should support additional prompt parameter in the authorization requests,\nthat is not a part of the OAuth specification, but it presents in the OpenID Connect specification\n(see http://openid.net/specs/openid-connect-basic-1_0.html#RequestParameters ).\nThe broker should respect the `none` value of this parameter and display no authentication UI and just return\nan error if the user session is already expired (the specific error codes is also standardized by the OIDC specification).\n",
+        "flows" : {
+          "implicit" : {
+            "authorizationUrl" : "https://api.bsc.com.vn/sso/oauth/authorize",
+            "scopes" : {
+              "general" : "permission to perform all requests"
+            }
+          }
+        }
+      },
+      "ServerOAuth2Bearer" : {
+        "type" : "oauth2",
+        "description" : "This authentication flow is used for server-to-server requests where authentication needs to be done without human intervention.\nIt can be used with the [/history](#operation/getHistory), [/symbol_info](#operation/getSymbolInfo), [/streaming](#operation/streaming)\nand [/groups](#operation/getGroups) endpoints.\n\nJSON Web Token (JWT) is used to securely transmit information between broker and BSC.\nMore information about JWT can be found [here](https://jwt.io/introduction/).\n\n### Application and OAuth2 parameters\n\nThe broker provides the following application and OAuth2 parameters to BSC:\n\nApplication parameter | Description | Example value\n-----------------|-------------|---------------\nAppUrl | A URL uniquely representing broker's application | https://your-rest-implementation.com\nUserId | A user identifier for which the access token will be issued | testuser1\n\nOAuth2 parameter | Description | Example value\n-----------------|-------------|---------------\nclient_id | A unique client Identifier | FGGH7-TRVC3-ECDD2-CDHRG3-FYUDG5 |\nclient_secret | Secret code | adfegywrtyw |\ntoken_url | An url to which the access token request will be sent | https://your-rest-implementation.com/authorize/token\ngrant_type | Indicates the type of grant being presented in exchange for an access token  | urn:your-broker:oauth:grant-type:personal-jwt\n\n### X.509 Certificate\nThe broker provides a valid X.509 certificate to BSC for signing JWT.\n\n\n### JSON Web Token\nJWT for the access token request is created with the following headers and claims:\n\nHeader | Description | Standard | Sample Value\n-------|-----------|------------|---------------\nx5t | Thumbprint of provided X.509 certificate used for signing JWT | [RFC 7515](https://tools.ietf.org/html/rfc7515#section-4.1.7) | 935093f1690900asdfd98626dfw35fa22b41d9dfd\nalg | Algorithm used to sign JWT. RS256 is only supported at the moment | [RFC 1518](https://tools.ietf.org/html/rfc7518#page-6) | RS256\n\nClaim | Description | Sample Value\n------|-------------|-------------\niss | Issuer - Value should be client_id | FGGH7-TRVC3-ECDD2-CDHRG3\nsub | UserId - Value should be the UserId for which token is needed | testuser1\nexp | Expiry - Value should be a unix time stamp indicating expiry of the token | 1549465914\naud | Audience - Value should be the token_url | https://api.bsc.com.vn/sso/oauth/token\nspurl | AppUrl - The AppUrl of your application | https://your-rest-implementation.com\n\n### Requesting the access token\nBSC sends a POST request to the `token_url` to obtain an access token.\nThis request needs to be authenticated using HTTP Basic Auth with `client_id` as a username and `client_secret` as password.\nThe basic auth is a base64 encoded string in the following format: `client_id:client_secret`.\nThe JWT is sent in a parameter named `assertion`.\n\n#### Example Access Token request - with Authorization header\n\n    POST /token HTTP/1.1\n    Host: https://your-rest-implementation.com\n    Authorization: Basic DVTrRfRtyuRGDVUNFW4=\n    Content-Type: application/x-www-form-urlencoded\n    grant_type=urn%3Ayour-broker%3Aoauth%3Agrant-type%3Apersonal-jwt\n    &assertion=eyJdtrgY7ghUJiotHGitTYUItyhjTyuioeEuJoio.EIOtjgt[omitted for brevity]\n\nThe response to this request should contain an `access_token` and a `refresh_token`:\n\n#### Example Access Token response\n    {\n      \"access_token\" : \"eyJhbfGujudUf.eyJvYWEiOiIw[omitted for brevity]\",\n      \"expires_in\": 1200,\n      \"token_type\": \"Bearer\",\n      \"refresh_token\": \"86fy7fa3d2-5e13-4736-86031-9ehiyiufrow0b\",\n      \"refresh_token_expires_in\": 2400\n    }\n",
+        "flows" : {
+          "clientCredentials" : {
+            "tokenUrl" : "https://api.bsc.com.vn/sso/oauth/token",
+            "scopes" : {
+              "general" : "permission to perform all requests"
+            }
+          }
+        }
+      }
+    }
+  }
+}
