@@ -41,6 +41,7 @@ info:
       please use the following endpoints - [/groups](#operation/getGroups) and [/permissions](#operation/getPermissions).
 
       You can find more information about restricting access to the data in the description of these endpoints.
+  x-logo: 
 
 servers:
   - url: https://api.fss.com.vn
