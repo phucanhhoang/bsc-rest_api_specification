@@ -21,6 +21,8 @@ info:
 
       ### Change log
       1.0.1 Release the first version.
+  x-logo:
+      url: https://www.bsc.com.vn/theme/image/logo.png
 
 servers:
   - url: https://your-rest-implementation.com/api
