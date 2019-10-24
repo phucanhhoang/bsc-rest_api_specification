@@ -1,104 +1,39 @@
 openapi:
   3.0.0
 info:
-  version: "1.1.0.0"
-  title: TradingView REST API Specification for Brokers
+  version: 1.0.1
+  title: BSC REST API Specification for Brokers
   description: |
     ## Overview
-      This API is to be implemented by the Brokers in order to connect their backend systems to TradingView, that acts as a frontend.
+      This API allows developers to integrate BSC's core brokerage business into their software applications.
 
-      Check the [info page](https://beta-rest.tradingview.com/brokerage-integration/) for more info & email
-      [founders@tradingview.com](mail:founders@tradingview.com) if you have any questions.
+      Check the [info page](https://bsc.com.vn) for more info & email
+      [services@bsc.com.vn](mail:services@bsc.com.vn) if you have any questions.
 
-      ### Types of requests
-      There are two types of requests — client and server.
-      Client requests are executed at the browser. Server requests are initiated from the TradingView servers.
-      If your integration does not imply brokerage data stream connection to the TradingView website -
-      then there won't be any server requests.
-
-      #### Clients requests
-      From the browser TradingView requests the info (list of orders and positions, balance info, etc.) from the broker’s server.
+      ### Requests from Developer's application
+      Developer's application requests the info (list of orders and positions, balance info, etc.) from the BSC's server. 
       The requests are sent periodically and the intervals can be set by using the [/config](#operation/getConfiguration) endpoint.
-      After that, TradingView compares the new data with the previous answer and calculates the difference.
-      If the status of the order/position changes or new data appears - the user will see a notification and the changes
-      will display in the Account Manager on the website.
 
       Requests to the [endpoints](/rest-api-spec/#tag/Trading) for placing/modifying orders, positions closing, etc. occur only after actions made by the user.
-
-      The [/quotes](#operation/getQuotes) endpoint retrieves the current bid/ask from the broker.
+      
+      The [/quotes](#operation/getQuotes) endpoint retrieves the current bid/ask.
       The [/depth](#operation/getDepth) endpoint retrieves Level 2 market data.
 
-      #### Server requests
-      In case if a Broker provides any Forex or CFD trading access for its clients it will require connection
-      of its own market data at TradingView. In order to make it possible, you will need to implement the following endpoints -
-        [/symbol_info](#operation/getSymbolInfo), [/history](#operation/getHistory) and [/streaming](#operation/streaming).
-      Data requests are sent from different TradingView servers. Usually, at least 4 servers are used.
-      The historical data is cached on TradingView servers and loaded to the client browser from our servers.
-
-      ### Restricting access to data
-      By default, the broker symbols will be available in the symbol search at TradingView and all the community
-      will have access to your data streams without any limitation. In order to limit the access to your data streams
-      please use the following endpoints - [/groups](#operation/getGroups) and [/permissions](#operation/getPermissions).
-
-      You can find more information about restricting access to the data in the description of these endpoints.
-  x-logo:
-    url: https://www.bsc.com.vn/theme/image/logo.png
+      ### Change log
+      1.0.1 Release the first version.
 
 servers:
-  - url: https://api.fss.com.vn
-    description: FSS REST API implementation url.
+  - url: https://your-rest-implementation.com/api
+    description: Your REST API implementation url. Change it to your real REST API url.
 
 paths:
 
-  /authorize:
-      post:
-        summary: Authorize
-        operationId: authorize
-        tags:
-          - Password authentication
-        description: Username and password authentication with the optional 2FA support.
-        requestBody:
-          required: true
-          content:
-            application/x-www-form-urlencoded:
-              schema:
-                type: object
-                properties:
-                  login:
-                    type: string
-                    description: User login.
-                  password:
-                    type: string
-                    description: User password.
-                  2faCode:
-                    type: string
-                    description: |
-                      Two Factor Authentication Code for the second `/authorize` request,
-                      if the `2fa_required` flag was set in the first request.
-                required:
-                  - login
-                  - password
-              example: {
-                "login": "user1",
-                "password": "dfkjhoijogpoi",
-                "2faCode": 3456753
-              }
-        responses:
-          200:
-            description: response
-            content:
-              application/json:
-                schema:
-                  oneOf:
-                    - $ref: '#/components/schemas/AuthorizeResponse'
-                    - $ref: '#/components/schemas/ErrorResponse'
-
   /config:
     get:
-      summary: Configuratio
-      operationId: fopks_openapi.pr_get_cfg_pulling_interval || fopks_openapi.pr_get_cfg_duration || fopks_openapi.pr_get_cfg_accmanagertable || fopks_openapi.pr_get_cfg_accmanagercolumn
+      summary: Configuration
+      operationId: getConfiguration
       tags:
-        - Broker configuration
+        - Broker Configuration
       description: Get localized configuration.
       parameters:
         - $ref: '#/components/parameters/locale'
@@ -118,9 +53,9 @@ paths:
   /mapping:
     get:
       summary: Mapping
-      operationId: fopks_datafeed.pr_get_mapping
+      operationId: getMapping
       tags:
-        - Broker configuration
+        - Broker Configuration
       description: |
         Return all broker instruments with corresponding TradingView instruments.
         It is required to add a Broker to TradingView.com.
@@ -131,14 +66,11 @@ paths:
           content:
             application/json:
               schema:
-                oneOf:
-                  - $ref: '#/components/schemas/MappingResponse'
-                  - $ref: '#/components/schemas/ErrorResponse'
-
+                $ref: '#/components/schemas/MappingResponse'
   /accounts:
     get:
       summary: Accounts
-      operationId: fopks_openapi.pr_get_accounts || fopks_openapi.pr_get_account_flags
+      operationId: getAccounts
       tags:
         - Account
       description: Get a list of accounts owned by the user.
@@ -158,7 +90,7 @@ paths:
   /accounts/{accountId}/state:
     get:
       summary: State
-      operationId: fopks_openapi.pr_get_state
+      operationId: getState
       tags:
         - Account
       description: Get account information.
@@ -177,15 +109,16 @@ paths:
                 oneOf:
                   - $ref: '#/components/schemas/AccountStateResponse'
                   - $ref: '#/components/schemas/ErrorResponse'
+
   /accounts/{accountId}/orders:
     get:
       summary: Orders
-      operationId: fopks_openapi.pr_get_orders
+      operationId: getOrders
       tags:
         - Account
       description: |
-        Get current session orders for the account. It is expected that broker returns orders
-        filled/cancelled/rejected during current session.
+        Get current session orders for the account. It also includes working orders from previous sessions.
+        Filled/cancelled/rejected orders should be included in the list till the end of the session.
       parameters:
         - $ref: '#/components/parameters/accountId'
       security:
@@ -202,18 +135,17 @@ paths:
                   - $ref: '#/components/schemas/ErrorResponse'
     post:
       summary: Place Order
-      operationId: fopks_openapi.pr_post_orders
+      operationId: placeOrder
       tags:
         - Trading
       description: |
         Place a new order.
       parameters:
         - $ref: '#/components/parameters/accountId'
-        - $ref: '#/components/parameters/requestId'
       requestBody:
         required: true
         content:
-          application/json:
+          application/x-www-form-urlencoded:
             schema:
               type: object
               properties:
@@ -253,7 +185,7 @@ paths:
                   type: string
                   example: gtt
                 durationDateTime:
-                  description: Expiration datetime UNIX timestamp (if supported by duration type).
+                  description: Expiration datetime Unix timestamp (if supported by duration type).
                   type: number
                   example: 1548406235
                 stopLoss:
@@ -266,6 +198,8 @@ paths:
                   description: Digital signature (if supported).
                   type: string
                   example: 954345868
+                requestId:
+                  $ref: '#/components/parameters/requestId'
               required:
                 - instrument
                 - qty
@@ -287,7 +221,7 @@ paths:
   /accounts/{accountId}/positions:
     get:
       summary: Positions
-      operationId: fopks_openapi.pr_get_positions
+      operationId: getPositions
       tags:
         - Account
       description: Get positions for an account.
@@ -309,7 +243,7 @@ paths:
   /accounts/{accountId}/executions:
     get:
       summary: Executions
-      operationId: fopks_openapi.pr_get_executions
+      operationId: getExecutions
       tags:
         - Account
       description: |
@@ -344,7 +278,7 @@ paths:
   /accounts/{accountId}/instruments:
     get:
       summary: Instruments
-      operationId: fopks_openapi.pr_get_instruments
+      operationId: getInstruments
       tags:
         - Account
       description: |
@@ -364,34 +298,10 @@ paths:
                   - $ref: '#/components/schemas/InstrumentsResponse'
                   - $ref: '#/components/schemas/ErrorResponse'
 
-  /accounts/{accountId}/permissions:
-    get:
-      summary: Permissions
-      operationId: getPermissions
-      tags:
-        - Account
-      description: |
-        Get a list of symbol groups allowed for the user.
-        It is only required if you use groups of symbols to restrict access to instrument's data.
-      parameters:
-        - $ref: '#/components/parameters/accountId'
-      security:
-        - PasswordBearer: []
-        - OAuth2Bearer: []
-      responses:
-        200:
-          description: response
-          content:
-            application/json:
-              schema:
-                oneOf:
-                  - $ref: '#/components/schemas/PermissionsResponse'
-                  - $ref: '#/components/schemas/ErrorResponse'
-
   /accounts/{accountId}/ordersHistory:
     get:
       summary: Orders History
-      operationId: fopks_openapi.pr_get_ordershistory
+      operationId: getOrdersHistory
       tags:
         - Account
       description: |
@@ -426,7 +336,10 @@ paths:
       operationId: getBalances
       tags:
         - Crypto Balances
-      description: Return all balances for the user account. Used for crypto currencies only.
+      description: |
+        Get crypto balances for an account.
+        Balances are displayed as the first table of the Account Summary tab.
+        Used for crypto currencies only.
       parameters:
         - $ref: '#/components/parameters/accountId'
       security:
@@ -439,24 +352,26 @@ paths:
             application/json:
               schema:
                 oneOf:
-                  - $ref: '#/components/schemas/BalancesResponse'
+                  - $ref: '#/components/schemas/CryptoBalancesResponse'
                   - $ref: '#/components/schemas/ErrorResponse'
 
 
   /accounts/{accountId}/orders/{orderId}:
     put:
-      summary: Modify Order/Sửa lệnh
-      operationId: fopks_openapi.pr_put_orders
+      summary: Modify Order
+      operationId: modifyOrder
       tags:
         - Trading
-      description: Modify an existing order/Sửa lệnh
+      description: Modify an existing order.
       parameters:
         - $ref: '#/components/parameters/accountId'
         - $ref: '#/components/parameters/orderId'
       requestBody:
+        required: true
         content:
           application/x-www-form-urlencoded:
             schema:
+              type: object
               properties:
                 qty:
                   description: The number of units to open order for.
@@ -472,7 +387,7 @@ paths:
                   description: Duration ID (if supported).
                   type: string
                 durationDateTime:
-                  description: Expiration datetime UNIX timestamp (if supported by duration type).
+                  description: Expiration datetime Unix timestamp (if supported by duration type).
                   type: number
                 stopLoss:
                   description: StopLoss price (if supported).
@@ -501,7 +416,7 @@ paths:
                   - $ref: '#/components/schemas/ErrorResponse'
     delete:
       summary: Cancel Order
-      operationId: fopks_openapi.pr_delete_orders
+      operationId: cancelOrder
       tags:
         - Trading
       description: Cancel an existing order.
@@ -524,7 +439,7 @@ paths:
   /accounts/{accountId}/positions/{positionId}:
     put:
       summary: Modify Position
-      operationId: fopks_openapi.pr_put_positions
+      operationId: modifyPosition
       tags:
         - Trading
       description: |
@@ -561,7 +476,7 @@ paths:
                   - $ref: '#/components/schemas/ErrorResponse'
     delete:
       summary: Close Position
-      operationId: fopks_openapi.pr_delete_positions
+      operationId: closePosition
       tags:
         - Trading
       description: Close an existing position.
@@ -584,7 +499,7 @@ paths:
   /quotes:
     get:
       summary: Quotes
-      operationId: fopks_datafeed.pr_get_quotes
+      operationId: getQuotes
       tags:
         - Market Data
       description: |
@@ -612,7 +527,7 @@ paths:
   /depth:
     get:
       summary: Depth
-      operationId: fopks_datafeed.pr_get_depths
+      operationId: getDepth
       tags:
         - Market Data
       description: Get current depth of market for the instrument. Optional.
@@ -641,11 +556,12 @@ paths:
       summary: Groups
       operationId: getGroups
       tags:
-        - Data Integration
+        - Data Permissions
       description: |
         Get a list of possible groups of symbols.
         A group is a set of symbols that share a common access level. Any user can have access to any number of such groups.
-
+        It is required only if you use groups of symbols in order to restrict access to the instrument's data.
+  
         **IMPORTANT:**
         Please plan your symbol grouping carefully. Groups cannot be deleted, you can only remove all the symbols from there.
 
@@ -663,8 +579,6 @@ paths:
         At the [/symbol_info](#operation/getSymbolInfo) endpoint TradingView adds the GET argument `group`
         with the name of the group. Thus, TradingView will receive information about which group each symbol belongs to.
 
-        It is required only if you use groups of symbols in order to restrict access to the instrument's data.
-
       security:
         - PasswordBearer: []
         - ServerOAuth2Bearer: []
@@ -676,6 +590,28 @@ paths:
               schema:
                 oneOf:
                   - $ref: '#/components/schemas/GroupListResponse'
+                  - $ref: '#/components/schemas/ErrorResponse'
+
+  /permissions:
+    get:
+      summary: Permissions
+      operationId: getPermissions
+      tags:
+        - Data Permissions
+      description: |
+        Get a list of symbol groups allowed for the user.
+        It is only required if you use groups of symbols to restrict access to instrument's data.
+      security:
+        - PasswordBearer: []
+        - OAuth2Bearer: []
+      responses:
+        200:
+          description: response
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/PermissionsResponse'
                   - $ref: '#/components/schemas/ErrorResponse'
 
   /symbol_info:
@@ -709,13 +645,18 @@ paths:
       description: |
         Request for history bars. Each property of the response object is treated as a table column.
 
+        Data should meet the following requirements:
+
+        - the real-time data obtained through the API must match the historical data obtained through the API by OHLC prices and volume;
+        - the data must not include unreasonable price gaps, historical data gaps on 1-minute and Daily-resolutions (temporal gaps), obviously incorrect prices (adhesions).
+
         Bar time for daily bars should be 00:00 UTC and is expected to be a trading day
         (not a day when the session starts).
 
         Bar time for monthly bars should be 00:00 UTC and is the first trading day of the month.
 
         If there is no data in the requested time period but there is data in the previous time period
-        you should set the status code to `no_data` and the `nb` property to UNIX timestamp of the next
+        you should set the status code to `no_data` and the `nb` property to Unix timestamp of the next
         available bar behind the range.
 
         If there is no data in the requested and previous time periods then you should set the status code to `no_data`.
@@ -788,134 +729,15 @@ paths:
 
 components:
   securitySchemes:
-    PasswordBearer:
-      type: http
-      scheme: bearer
-      bearerFormat: Bearer ACCESS_TOKEN
-      description: |
-        This flow uses login and password to authenticate a user. Username and password are sent as parameters
-        to the [/authorize](/rest-api-spec/#operation/authorize) endpoint.
-
-        **Note**: If the broker wants to use the  2 Factor Authentication, then the `2fa_required` flag should be set
-        to `true` in the [/authorize](/rest-api-spec/#operation/authorize) response. In this case the user is asked
-        to enter an additional 2FA code.
-        This code among with the username and the password is sent to the broker again.
-
-        If the username, password and 2FA code (optional) are valid, then the broker issues an access token
-        and returns it in the response. The access token is sent with every request in the Authorization header.
-
-    OAuth2Bearer:
+    Authentication via SSO server:
       type: oauth2
       flows:
         implicit:
-          authorizationUrl: https://api.fss.com.vn/sso/oauth/authorize
+          authorizationUrl: https://your-rest-implementation.com/oauth/authorize
           scopes:
             general: permission to perform all requests
       description: |
-        TradingView is using the implicit flow of OAuth 2. According to the [RFC](https://tools.ietf.org/html/rfc6749),
-        this implies the following:
-          - an access token is passed directly to the user agent as a fragment in redirect_uri;
-          - refresh token is not used;
-
-        The broker provides a client id and an authorization endpoint URI to TradingView. TradingView provides two redirect URI's
-        to the broker: one for the staging environment and another one for the production environment.
-
-        TradingView sends the authorization request according to [OAuth 2 specification, 4.2.1](https://tools.ietf.org/html/rfc6749#section-4.2.1).
-        The following parameters should be in the query part of the authorization URI:
-          - `response_type` should be `token`;
-          - `client_id` is a constant string provided by the broker;
-          - `redirect_uri` is a known prescribed URI where the access token should be added as a fragment after successful authorization. **Note**: redirect URI should be verified by the broker's OAuth service, and should be whitelisted on the broker's service;
-          - `scope` is set to `general`;
-          - `state`  is a verbatim string the broker should return back to TradingView without modifications in the authorization response.
-
-        In case of successful authorization, the OAuth service redirects the user-agent (browser) to `redirect_uri`
-        with the access token added as a fragment, according to https://tools.ietf.org/html/rfc6749#section-4.2.2.
-        The `state` parameter should be passed without modifications.
-
-        After performing authorization, the access token is sent with every request in the `Authorization` header.
-
-        In order to refresh the access token the broker should support additional prompt parameter in the authorization requests,
-        that is not a part of the OAuth specification, but it presents in the OpenID Connect specification
-        (see http://openid.net/specs/openid-connect-basic-1_0.html#RequestParameters ).
-        The broker should respect the `none` value of this parameter and display no authentication UI and just return
-        an error if the user session is already expired (the specific error codes is also standardized by the OIDC specification).
-
-    ServerOAuth2Bearer:
-      type: oauth2
-      flows:
-        clientCredentials:
-          tokenUrl: https://api.fss.com.vn/sso/oauth/token
-          scopes:
-            general: permission to perform all requests
-      description: |
-        This authentication flow is used for server-to-server requests where authentication needs to be done without human intervention.
-        It can be used with the [/history](#operation/getHistory), [/symbol_info](#operation/getSymbolInfo), [/streaming](#operation/streaming)
-        and [/groups](#operation/getGroups) endpoints.
-
-        JSON Web Token (JWT) is used to securely transmit information between broker and TradingView.
-        More information about JWT can be found [here](https://jwt.io/introduction/).
-
-        ### Application and OAuth2 parameters
-
-        The broker provides the following application and OAuth2 parameters to TradingView:
-
-        Application parameter | Description | Example value
-        -----------------|-------------|---------------
-        AppUrl | A URL uniquely representing broker's application | https://your-rest-implementation.com
-        UserId | A user identifier for which the access token will be issued | testuser1
-
-        OAuth2 parameter | Description | Example value
-        -----------------|-------------|---------------
-        client_id | A unique client Identifier | FGGH7-TRVC3-ECDD2-CDHRG3-FYUDG5 |
-        client_secret | Secret code | adfegywrtyw |
-        token_url | An url to which the access token request will be sent | https://your-rest-implementation.com/authorize/token
-        grant_type | Indicates the type of grant being presented in exchange for an access token  | urn:your-broker:oauth:grant-type:personal-jwt
-
-        ### X.509 Certificate
-        The broker provides a valid X.509 certificate to TradingView for signing JWT.
-
-
-        ### JSON Web Token
-        JWT for the access token request is created with the following headers and claims:
-
-        Header | Description | Standard | Sample Value
-        -------|-----------|------------|---------------
-        x5t | Thumbprint of provided X.509 certificate used for signing JWT | [RFC 7515](https://tools.ietf.org/html/rfc7515#section-4.1.7) | 935093f1690900asdfd98626dfw35fa22b41d9dfd
-        alg | Algorithm used to sign JWT. RS256 is only supported at the moment | [RFC 1518](https://tools.ietf.org/html/rfc7518#page-6) | RS256
-
-        Claim | Description | Sample Value
-        ------|-------------|-------------
-        iss | Issuer - Value should be client_id | FGGH7-TRVC3-ECDD2-CDHRG3
-        sub | UserId - Value should be the UserId for which token is needed | testuser1
-        exp | Expiry - Value should be a unix time stamp indicating expiry of the token | 1549465914
-        aud | Audience - Value should be the token_url | https://api.fss.com.vn/sso/oauth/token
-        spurl | AppUrl - The AppUrl of your application | https://your-rest-implementation.com
-
-        ### Requesting the access token
-        TradingView sends a POST request to the `token_url` to obtain an access token.
-        This request needs to be authenticated using HTTP Basic Auth with `client_id` as a username and `client_secret` as password.
-        The basic auth is a base64 encoded string in the following format: `client_id:client_secret`.
-        The JWT is sent in a parameter named `assertion`.
-
-        #### Example Access Token request - with Authorization header
-
-            POST /token HTTP/1.1
-            Host: https://your-rest-implementation.com
-            Authorization: Basic DVTrRfRtyuRGDVUNFW4=
-            Content-Type: application/x-www-form-urlencoded
-            grant_type=urn%3Ayour-broker%3Aoauth%3Agrant-type%3Apersonal-jwt
-            &assertion=eyJdtrgY7ghUJiotHGitTYUItyhjTyuioeEuJoio.EIOtjgt[omitted for brevity]
-
-        The response to this request should contain an `access_token` and a `refresh_token`:
-
-        #### Example Access Token response
-            {
-              "access_token" : "eyJhbfGujudUf.eyJvYWEiOiIw[omitted for brevity]",
-              "expires_in": 1200,
-              "token_type": "Bearer",
-              "refresh_token": "86fy7fa3d2-5e13-4736-86031-9ehiyiufrow0b",
-              "refresh_token_expires_in": 2400
-            }
+        We implement OAuth2 with a separate window. Developer's customers who have opened a trading account in BSC, follow our authentication flow to register their trading accounts with Developer's application.
 
   parameters:
         locale:
@@ -1029,12 +851,21 @@ components:
         - ok
         - error
 
+    OkStatus:
+      type: string
+      description: Status will always be `ok`.
+      enum:
+        - ok
+      example: 'ok'
+
     ErrorResponse:
       type: object
       properties:
         s:
           type: string
           description: Status will always be `error`.
+          enum:
+            - error
           example: 'error'
         errmsg:
           type: string
@@ -1050,6 +881,8 @@ components:
         s:
           type: string
           description: Status will always be `ok`.
+          enum:
+            - ok
           example: 'ok'
       required:
         - s
@@ -1073,28 +906,26 @@ components:
               $ref: '#/components/schemas/Config'
           required:
             - d
+          example: {
+            "name": "EURUSD",
+            "description": "EUR/USD "
+          }
 
     MappingResponse:
-      allOf:
-        - $ref: '#/components/schemas/SuccessResponse'
-        - type: object
-          properties:
-            d:
-              $ref: '#/components/schemas/SymbolMapping'
-          required:
-            - d
+        $ref: '#/components/schemas/SymbolMapping'
 
     AccountResponse:
-      allOf:
-        - $ref: '#/components/schemas/SuccessResponse'
-        - type: object
-          properties:
-            d:
-              type: array
-              items:
-                $ref: '#/components/schemas/Account'
-          required:
-            - d
+      type: object
+      properties:
+        s:
+          $ref: '#/components/schemas/OkStatus'
+        d:
+          type: array
+          items:
+            $ref: '#/components/schemas/Account'
+      required:
+        - s
+        - d
 
     AccountStateResponse:
       allOf:
@@ -1107,178 +938,186 @@ components:
             - d
 
     ExecutionsResponse:
-      allOf:
-        - $ref: '#/components/schemas/SuccessResponse'
-        - type: object
-          properties:
-            d:
-              type: array
-              items:
-                $ref: '#/components/schemas/Execution'
-          required:
-            - d
+      type: object
+      properties:
+        s:
+          $ref: '#/components/schemas/OkStatus'
+        d:
+          type: array
+          items:
+            $ref: '#/components/schemas/Execution'
+      required:
+        - s
+        - d
 
     InstrumentsResponse:
-      allOf:
-        - $ref: '#/components/schemas/SuccessResponse'
-        - type: object
-          properties:
-            d:
-              type: array
-              items:
-                $ref: '#/components/schemas/Instrument'
-              example: [
-                {
-                  "name": "EURUSD",
-                  "description": "EUR/USD ",
-                  "minQty": 1,
-                  "maxQty": 100000000,
-                  "qtyStep": 100,
-                  "pipSize": 0.0001,
-                  "pipValue": 0.00008845,
-                  "minTick": 0.00001,
-                  "type": "forex"
-                },
-                {
-                  "name": "AAPLE",
-                  "description": "Apple Inc",
-                  "minQty": 1,
-                  "maxQty": 100000000,
-                  "qtyStep": 1,
-                  "pipSize": 0.01,
-                  "pipValue": 1,
-                  "minTick": 0.01,
-                  "type": "stock"
-                }
-              ]
-          required:
-            - d
+      type: object
+      properties:
+        s:
+          $ref: '#/components/schemas/OkStatus'
+        d:
+          type: array
+          items:
+            $ref: '#/components/schemas/Instrument'
+          example: [
+            {
+              "name": "EURUSD",
+              "description": "EUR/USD ",
+              "minQty": 1,
+              "maxQty": 100000000,
+              "qtyStep": 100,
+              "pipSize": 0.0001,
+              "pipValue": 0.00008845,
+              "minTick": 0.00001,
+              "marginRate": 0.05,
+              "type": "forex"
+            },
+            {
+              "name": "AAPLE",
+              "description": "Apple Inc",
+              "minQty": 1,
+              "maxQty": 100000000,
+              "qtyStep": 1,
+              "pipSize": 0.01,
+              "pipValue": 1,
+              "minTick": 0.01,
+              "type": "stock"
+            }
+          ]
+      required:
+        - s
+        - d
 
     PermissionsResponse:
-      allOf:
-        - $ref: '#/components/schemas/SuccessResponse'
-        - type: object
-          properties:
-            d:
-              type: array
-              items:
-                $ref: '#/components/schemas/Permissions'
-          required:
-            - d
+      type: object
+      properties:
+        s:
+          $ref: '#/components/schemas/OkStatus'
+        d:
+          type: array
+          items:
+            $ref: '#/components/schemas/Permissions'
+      required:
+        - s
+        - d
 
-    BalancesResponse:
-      allOf:
-        - $ref: '#/components/schemas/SuccessResponse'
-        - type: object
-          properties:
-            d:
-              type: array
-              items:
-                $ref: '#/components/schemas/Balance'
-          required:
-            - d
+    CryptoBalancesResponse:
+      type: object
+      properties:
+        s:
+          $ref: '#/components/schemas/OkStatus'
+        d:
+          type: array
+          items:
+            $ref: '#/components/schemas/CryptoBalance'
+      required:
+        - s
+        - d
 
     OrdersResponse:
-      allOf:
-        - $ref: '#/components/schemas/SuccessResponse'
-        - type: object
-          properties:
-            d:
-              type: array
-              items:
-                $ref: '#/components/schemas/Order'
-              example: [
-                {
-                  "id": "1",
-                  "instrument": "EURUSD",
-                  "qty": 100,
-                  "side": "buy",
-                  "type": "limit",
-                  "avgPrice": 0,
-                  "limitPrice": 1.14344,
-                  "duration": {
-                    "type": "gtt",
-                    "datetime": 1548406235
-                  },
-                  "status": "working"
-                },
-                {
-                  "id": "2",
-                  "instrument": "EURUSD",
-                  "qty": 100,
-                  "side": "sell",
-                  "type": "limit",
-                  "filledQty": 50,
-                  "avgPrice": 0,
-                  "limitPrice": 1.15094,
-                  "parentId": "1",
-                  "parentType": "order",
-                  "duration": {
-                    "type": "gtt",
-                    "datetime": 1548406235
-                  },
-                  "status": "inactive"
-                }
-              ]
-          required:
-            - d
+      type: object
+      properties:
+        s:
+          $ref: '#/components/schemas/OkStatus'
+        d:
+          type: array
+          items:
+            $ref: '#/components/schemas/Order'
+          example: [
+            {
+              "id": "1",
+              "instrument": "EURUSD",
+              "qty": 100,
+              "side": "buy",
+              "type": "limit",
+              "avgPrice": 0,
+              "limitPrice": 1.14344,
+              "duration": {
+                "type": "gtt",
+                "datetime": 1548406235
+              },
+              "status": "working"
+            },
+            {
+              "id": "2",
+              "instrument": "EURUSD",
+              "qty": 100,
+              "side": "sell",
+              "type": "limit",
+              "filledQty": 50,
+              "avgPrice": 0,
+              "limitPrice": 1.15094,
+              "parentId": "1",
+              "parentType": "order",
+              "duration": {
+                "type": "gtt",
+                "datetime": 1548406235
+              },
+              "status": "inactive"
+            }
+          ]
+      required:
+        - s
+        - d
 
     OrdersHistoryResponse:
-      allOf:
-        - $ref: '#/components/schemas/SuccessResponse'
-        - type: object
-          properties:
-            d:
-              type: array
-              items:
-                $ref: '#/components/schemas/OrderHistory'
-              example: [
-                        {
-                          "id": "1",
-                          "instrument": "EURUSD",
-                          "qty": 100,
-                          "side": "buy",
-                          "type": "limit",
-                          "avgPrice": 0,
-                          "limitPrice": 1.14344,
-                          "duration": {
-                            "type": "gtt",
-                            "datetime": 1548406235
-                          },
-                          "status": "filled"
-                        },
-                        {
-                          "id": "2",
-                          "instrument": "EURUSD",
-                          "qty": 100,
-                          "side": "sell",
-                          "type": "limit",
-                          "filledQty": 50,
-                          "avgPrice": 0,
-                          "limitPrice": 1.15094,
-                          "parentId": "1",
-                          "parentType": "order",
-                          "duration": {
-                            "type": "gtt",
-                            "datetime": 1548406235
-                          },
-                          "status": "cancelled"
-                        }
-                      ]
-          required:
-            - d
+      type: object
+      properties:
+        s:
+          $ref: '#/components/schemas/OkStatus'
+        d:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderHistory'
+          example: [
+                    {
+                      "id": "1",
+                      "instrument": "EURUSD",
+                      "qty": 100,
+                      "side": "buy",
+                      "type": "limit",
+                      "avgPrice": 0,
+                      "limitPrice": 1.14344,
+                      "duration": {
+                        "type": "gtt",
+                        "datetime": 1548406235
+                      },
+                      "status": "filled"
+                    },
+                    {
+                      "id": "2",
+                      "instrument": "EURUSD",
+                      "qty": 100,
+                      "side": "sell",
+                      "type": "limit",
+                      "filledQty": 50,
+                      "avgPrice": 0,
+                      "limitPrice": 1.15094,
+                      "parentId": "1",
+                      "parentType": "order",
+                      "duration": {
+                        "type": "gtt",
+                        "datetime": 1548406235
+                      },
+                      "status": "cancelled"
+                    }
+                  ]
+      required:
+        - s
+        - d
 
     PositionsResponse:
-      allOf:
-        - $ref: '#/components/schemas/SuccessResponse'
-        - type: object
-          properties:
-            d:
-              type: array
-              items:
-                $ref: '#/components/schemas/Position'
-          required:
-            - d
+      type: object
+      properties:
+        s:
+          $ref: '#/components/schemas/OkStatus'
+        d:
+          type: array
+          items:
+            $ref: '#/components/schemas/Position'
+      required:
+        - s
+        - d
 
     PostOrderResponse:
       allOf:
@@ -1296,30 +1135,50 @@ components:
             - d
 
     QuotesResponse:
-          allOf:
-            - $ref: '#/components/schemas/SuccessResponse'
-            - type: object
-              properties:
-                d:
-                  type: array
-                  items:
-                    type: object
-                    description: Price response for an instrument.
-                    properties:
-                      s:
-                        $ref: '#/components/schemas/Status'
-                      n:
-                        description: Symbol name. Should be equal to the requested one.
-                        type: string
-                        example: 'EURUSD'
-                      v:
-                        $ref: '#/components/schemas/SingleQuote'
-                    required:
-                      - s
-                      - n
-                      - v
-              required:
-                - d
+      type: object
+      properties:
+        s:
+          $ref: '#/components/schemas/OkStatus'
+        d:
+          type: array
+          items:
+            type: object
+            description: Price response for an instrument.
+            properties:
+              s:
+                $ref: '#/components/schemas/Status'
+              n:
+                description: Symbol name. Should be equal to the requested one.
+                type: string
+                example: 'EURUSD'
+              v:
+                $ref: '#/components/schemas/SingleQuote'
+            required:
+              - s
+              - n
+              - v
+      required:
+      - s
+      - d
+
+    QuotesSuccessResponse:
+      type: array
+      items:
+        type: object
+        description: Price response for an instrument.
+        properties:
+          s:
+            $ref: '#/components/schemas/Status'
+          n:
+            description: Symbol name. Should be equal to the requested one.
+            type: string
+            example: 'EURUSD'
+          v:
+            $ref: '#/components/schemas/SingleQuote'
+        required:
+          - s
+          - n
+          - v
 
     DepthResponse:
       allOf:
@@ -1450,13 +1309,37 @@ components:
             seconds since the Unix epoch (00:00:00 UTC on 1 January 1970).
           type: number
           example: 1548661401
-        2fa_required:
-          description: Set it to `true` if Two Factor Authentication Code is required in the next /authorize request.
-          type: boolean
 
     Config:
       type: object
       properties:
+        accountSummaryRow:
+          type: array
+          description:
+            Localized Account Summary Row configuration.
+
+            Account Summary Row is a panel at the top of the bottom widget with the key account indicators.
+            The `supportCustomAccountSummaryRow` flag should be enabled in the account config,
+            see the [/accounts](#operation/getAccounts) endpoint.
+            Data of the Account Summary Row is filled using the [/state](/rest-api-spec/#operation/getState) endpoint.
+          items:
+            $ref: '#/components/schemas/AccountSummaryRowItem'
+
+          example:
+            [
+              {
+                "id": "accountBalance",
+                "title": "Account Balance"
+              },
+              {
+                "id": "Equity",
+                "title": "Realized P/L"
+              },
+              {
+                "id": "Open Profit",
+                "title": "Unrealized P/L"
+              }
+            ]
         accountManager:
           type: array
           description: |
@@ -1533,6 +1416,21 @@ components:
           "fields": ["brokerSymbol"]
         }
 
+    AccountSummaryRowItem:
+      type: object
+      required:
+        - id
+        - title
+      properties:
+        id:
+          type: string
+          description: Unique Account Summary Row item identifier.
+          example: '1'
+        title:
+          type: string
+          description: Localized Account Summary Row item title.
+          example: 'Account Summary'
+
     AccountManagerTable:
       type: object
       required:
@@ -1600,6 +1498,13 @@ components:
           description: Display time control in Order Ticket for this duration type.
           type: boolean
           example: true
+        default:
+          description: |
+            Default duration. Only one duration object in the durations array can have a `true` value for this field.
+            The default duration will be used when the user places orders in the silent mode and it will be the selected one
+            when the user opens the order dialog for the first time.
+          type: boolean
+          example: true
 
     PullingInterval:
       type: object
@@ -1631,6 +1536,11 @@ components:
             Time interval in milliseconds to update Account Manager tables. The default value is `500` ms.
           type: number
           example: 300
+        balances:
+          description: |
+            Time interval in milliseconds to request balances. The default value is `1000` ms.
+          type: number
+          example: 2000
 
     SingleField:
       type: string
@@ -1649,7 +1559,7 @@ components:
             type: string
             example: 'EURUSD'
         s:
-          description: TradingView symbol name with prefix (AA:XXXX).
+          description: TradingView symbol name with a prefix (AA:XXXX).
           type: string
           example: 'FX_IDC:EURUSD'
 
@@ -1658,6 +1568,7 @@ components:
       required:
         - id
         - name
+        - type
         - config
       properties:
         id:
@@ -1668,6 +1579,13 @@ components:
           description: Account title that is displayed to a user.
           type: string
           example: 'Demo trading account'
+        type:
+          description: Account type
+          type: string
+          enum:
+            - live
+            - demo
+          example: 'demo'
         currency:
           description: Abbreviation of account currency.
           type: string
@@ -1702,6 +1620,12 @@ components:
           description: |
             Whether you support closing of a position without a need for a user to fill an order.
           type: boolean
+        supportModifyOrder:
+          description: Whether you support the modification of the existing order.
+          type: boolean
+        supportModifyDuration:
+          description: Whether you support the modification of the duration of the existing order.
+          type: boolean
         supportEditAmount:
           description: |
             Whether you support editing orders quantity. If you set it to `false`,
@@ -1712,6 +1636,10 @@ components:
           description: |
             Whether you support Level 2 data. It is required to display DOM levels. You must implement
             [/streaming](/rest-api-spec/#operation/streaming) to display DOM.
+          type: boolean
+        supportPositions:
+          description: |
+            Whether you support the Positions tab. If you set it to `false`, the `/positions` endpoint will not be used.
           type: boolean
         supportMultiposition:
           description: |
@@ -1738,7 +1666,10 @@ components:
           description: Whether you support Digital signature input field in the Order Ticket.
           type: boolean
         supportBalances:
-          description:  Whether you support [/balances](/rest-api-spec/#operation/getBalances) request
+          description:  Whether you support [/balances](/rest-api-spec/#operation/getBalances) request.
+          type: boolean
+        supportCustomAccountSummaryRow:
+          description: Whether you support custom Account Summary Row.
           type: boolean
 
     AccountState:
@@ -1771,6 +1702,13 @@ components:
               type: array
               items:
                 type: string
+        accountSummaryRowData:
+          description: |
+            Account Summary Row data. Structure of Account Summary Row is defined by the
+            [/config](#operation/getConfiguration) endpoint.
+          type: array
+          items:
+            type: string
       example: {
                   "balance": 41757.91,
                   "unrealizedPl": 1053.02,
@@ -1786,6 +1724,11 @@ components:
                         "41757.91"
                       ]
                     ]
+                  ],
+                  "accountSummaryRowData": [
+                    "96883.89",
+                    "96837.12",
+                    "-46.77"
                   ]
                 }
 
@@ -1846,7 +1789,7 @@ components:
             - order
             - position
         duration:
-          description: Expiration type and UNIX timestamp date/time.
+          description: Expiration type and Unix timestamp date/time.
           type: object
           required:
             - type
@@ -1855,8 +1798,11 @@ components:
               description: Duration ID. Internal ID that you set in [/config](#operation/getConfiguration) response.
               type: string
             datetime:
-              description: Unit timestamp (UTC).
+              description: Unix timestamp (UTC).
               type: number
+        lastModified:
+          description: Indicates the time when the order was last modified, Unix timestamp (UTC).
+          type: number
 
     OrderStatus:
       type: object
@@ -1990,7 +1936,7 @@ components:
           type: number
           example: 1.23564
         time:
-          description: Execution time.
+          description: Execution time, Unix timestamp (UTC).
           type: number
           example: 1548406235
         qty:
@@ -2010,6 +1956,8 @@ components:
       required:
         - name
         - description
+        - pipSize
+        - pipValue
       properties:
         name:
           description: Broker instrument name.
@@ -2018,24 +1966,24 @@ components:
         description:
           description: Instrument description.
           type: string
-          example: 'EUR/USD '
+          example: 'EUR/USD'
         minQty:
-          description: Minimum quantity for trading.
+          description: Minimum quantity for trading. If `lotSize` is set, then the specified value must be in lots.
           type: number
           example: 1
         maxQty:
-          description: Maximum quantity for trading.
+          description: Maximum quantity for trading. If `lotSize` is set, then the specified value must be in lots.
           type: number
           example: 100000000
         qtyStep:
-          description: Quantity step.
+          description: Quantity step. If `lotSize` is set, then the specified value must be in lots.
           type: number
           example: 100
         pipSize:
           description: |
             Size of 1 pip.
             It is equal to `minTick` for non-forex symbols. For forex pairs it equals either the `minTick`,
-            or the `minTick` multiplied by `10`. For example, for EURCAD `minTick` is `0.00001` and `pipSize` is `0.0001`.
+            or the `minTick` multiplied by `10`. For example, for IBM `minTick` it is 0.01, for EURCAD `minTick` it is 0.00001.
           type: number
           example: 0.0001
         pipValue:
@@ -2045,11 +1993,11 @@ components:
           type: number
           example: 0.00008845
         minTick:
-          description: Minimum price movement.
+          description: Minimum price movement. For example, for IBM `minTick` is 0.01, for EURCAD `minTick` is 0.00001.
           type: number
           example: 0.00001
         lotSize:
-          description: Size of 1 lot.
+          description: Number of shares you buy in one transaction. Used for the stock market.
           type: number
           example: 10
         baseCurrency:
@@ -2059,6 +2007,10 @@ components:
           description: |
             A quote currency is the second currency quoted in a currency pair. Used for crypto currencies only.
           type: string
+        marginRate:
+          description: Margin rate for this instrument.
+          type: number
+          example: 0.05
         type:
           description: Symbol type (forex/stock etc.).
           type: string
@@ -2090,7 +2042,7 @@ components:
             type: string
             example: 'broker_stocks'
 
-    Balance:
+    CryptoBalance:
       type: object
       required:
         - symbol
@@ -2162,6 +2114,12 @@ components:
           description: Volume.
           type: number
           example: 0
+        buyPipValue:
+          description: Value of 1 pip in the account currency, used for calculating risks and trade value in the order dialog for buy orders.
+          example: 1
+        sellPipValue:
+          description: Value of 1 pip in the account currency, used for calculating risks and trade value in the order dialog for sell orders.
+          example: 1
 
     DepthItem:
       type: array
@@ -2180,16 +2138,12 @@ components:
             description: Array of arrays with two numeric elements - price and volume. Must be sorted by `price` in asc order.
             type: array
             items:
-              type: array
-              items:
-                $ref: '#/components/schemas/DepthItem'
+              $ref: '#/components/schemas/DepthItem'
           bids:
             description: Array of arrays with two numeric elements - price and volume. Must be sorted by `price` in asc order.
             type: array
             items:
-              type: array
-              items:
-                $ref: '#/components/schemas/DepthItem'
+              $ref: '#/components/schemas/DepthItem'
         example: {asks: [[45.10, 100], [48.4, 120]], bids: [[24.7, 80], [35.6, 30]]}
 
     GroupList:
@@ -2203,7 +2157,6 @@ components:
           items:
             description: |
               Each element of this array is an group object.
-            example: [{id: broker_stocks'}, {id: broker_forex}]
             type: object
             required:
               - id
@@ -2213,6 +2166,7 @@ components:
                   All characters in a group id must be either a lowercase alphabetic character or an underscore.
                   A group id should start with the same prefix related to the broker's name.
                 type: string
+      example: [{id: broker_stocks'}, {id: broker_forex}]
 
     SymbolInfoArrays:
       type: object
@@ -2256,7 +2210,7 @@ components:
           type: array
           items:
             type: string
-          example: 'USD'
+          example: ['USD', 'USD', 'USD']
         base-currency:
           description: |
             For currency pairs only. This field contains the first currency of the pair. For example, base currency for
@@ -2563,7 +2517,7 @@ components:
       properties:
         t:
           description: |
-            Bar time, unix timestamp (UTC). Daily bars should only have the date
+            Bar time, Unix timestamp (UTC). Daily bars should only have the date
             part, time should be 0.
           type: array
           items:
@@ -2658,6 +2612,6 @@ components:
           type: number
           example: 100
         t:
-          description: UNIX time UTC.
+          description: Unix time UTC.
           type: number
           example: 1547942400
