@@ -2,7 +2,7 @@ openapi:
   3.0.0
 info:
   version: 1.0.1
-  title: BSC REST API Specification for Brokers
+  title: BSC REST API Specification for Developers
   description: |
     ## Overview
       This API allows developers to integrate BSC's core brokerage business into their software applications.
@@ -35,13 +35,10 @@ paths:
       summary: Configuration
       operationId: getConfiguration
       tags:
-        - Broker Configuration
+        - Configuration
       description: Get localized configuration.
       parameters:
         - $ref: '#/components/parameters/locale'
-      security:
-        - PasswordBearer: []
-        - OAuth2Bearer: []
       responses:
         200:
           description: response
@@ -57,7 +54,7 @@ paths:
       summary: Mapping
       operationId: getMapping
       tags:
-        - Broker Configuration
+        - Configuration
       description: |
         Return all BSC instruments.
         Please note that this endpoint works without authorization!
@@ -75,8 +72,6 @@ paths:
       tags:
         - Account
       description: Get a list of accounts owned by the user.
-      security:
-        - Authentication via SSO server: []
       responses:
         200:
           description: response
@@ -96,9 +91,6 @@ paths:
       description: Get account information.
       parameters:
         - $ref: '#/components/parameters/accountId'
-        - $ref: '#/components/parameters/locale'
-      security:
-        - Authentication via SSO server: []
       responses:
         200:
           description: response
@@ -120,9 +112,6 @@ paths:
         Filled/cancelled/rejected orders should be included in the list till the end of the session.
       parameters:
         - $ref: '#/components/parameters/accountId'
-      security:
-        - PasswordBearer: []
-        - OAuth2Bearer: []
       responses:
         200:
           description: response
@@ -204,9 +193,6 @@ paths:
                 - qty
                 - side
                 - type
-      security:
-        - PasswordBearer: []
-        - OAuth2Bearer: []
       responses:
         200:
           description: response
@@ -226,9 +212,6 @@ paths:
       description: Get positions for an account.
       parameters:
         - $ref: '#/components/parameters/accountId'
-      security:
-        - PasswordBearer: []
-        - OAuth2Bearer: []
       responses:
         200:
           description: response
@@ -261,9 +244,6 @@ paths:
           in: query
           schema:
             type: number
-      security:
-        - PasswordBearer: []
-        - OAuth2Bearer: []
       responses:
         200:
           description: response
@@ -284,9 +264,6 @@ paths:
         Get the list of the instruments that are available for trading with the specified account.
       parameters:
         - $ref: '#/components/parameters/accountId'
-      security:
-        - PasswordBearer: []
-        - OAuth2Bearer: []
       responses:
         200:
           description: response
@@ -315,9 +292,6 @@ paths:
           in: query
           schema:
             type: number
-      security:
-        - PasswordBearer: []
-        - OAuth2Bearer: []
       responses:
         200:
           description: response
@@ -401,9 +375,6 @@ paths:
                   $ref: '#/components/parameters/requestId'
               required:
                 - qty
-      security:
-        - PasswordBearer: []
-        - OAuth2Bearer: []
       responses:
         200:
           description: response
@@ -422,9 +393,6 @@ paths:
       parameters:
         - $ref: '#/components/parameters/accountId'
         - $ref: '#/components/parameters/orderId'
-      security:
-        - PasswordBearer: []
-        - OAuth2Bearer: []
       responses:
         200:
           description: response
@@ -461,9 +429,6 @@ paths:
                   description: TakeProfit price.
                   type: number
                   example: 1.294436
-      security:
-        - PasswordBearer: []
-        - OAuth2Bearer: []
       responses:
         200:
           description: response
@@ -482,9 +447,6 @@ paths:
       parameters:
         - $ref: '#/components/parameters/accountId'
         - $ref: '#/components/parameters/positionId'
-      security:
-        - PasswordBearer: []
-        - OAuth2Bearer: []
       responses:
         200:
           description: response
@@ -510,9 +472,6 @@ paths:
           schema:
             type: string
           required: true
-      security:
-        - PasswordBearer: []
-        - OAuth2Bearer: []
       responses:
         200:
           description: response
@@ -729,12 +688,6 @@ paths:
 components:
   securitySchemes:
     Authentication via SSO server:
-      type: oauth2
-      flows:
-        implicit:
-          authorizationUrl: https://your-rest-implementation.com/oauth/authorize
-          scopes:
-            general: permission to perform all requests
       description: |
         We implement OAuth2 with a separate window. Developer's customers who have opened a trading account in BSC, follow our authentication flow to register their trading accounts with Developer's application.
 
@@ -960,27 +913,33 @@ components:
             $ref: '#/components/schemas/Instrument'
           example: [
             {
-              "name": "EURUSD",
-              "description": "EUR/USD ",
-              "minQty": 1,
-              "maxQty": 100000000,
-              "qtyStep": 100,
-              "pipSize": 0.0001,
-              "pipValue": 0.00008845,
-              "minTick": 0.00001,
-              "marginRate": 0.05,
-              "type": "forex"
+              "name": "BID",
+              "description": "Ngân hàng TMCP Đầu tư và Phát triển Việt Nam",
+              "minQty": 0,
+              "maxQty": 0,
+              "qtyStep": 0,
+              "pipSize": 0,
+              "pipValue": 0,
+              "minTick": 10,
+              "lotSize": 10,
+              "baseCurrency": null,
+              "quoteCurrency": null,
+              "marginRate": 0,
+              "type": "stock"
             },
             {
-              "name": "AAPLE",
-              "description": "Apple Inc",
-              "minQty": 1,
-              "maxQty": 100000000,
-              "qtyStep": 1,
-              "pipSize": 0.01,
-              "pipValue": 1,
-              "minTick": 0.01,
-              "type": "stock"
+              "name": "VN30F1909",
+              "description": null,
+              "minQty": 0,
+              "maxQty": 0,
+              "qtyStep": 0,
+              "pipSize": 0,
+              "pipValue": 0,
+              "minTick": 0.1,
+              "lotSize": 1,
+              "baseCurrency": null,
+              "quoteCurrency": null,
+              "type": "futures"
             }
           ]
       required:
@@ -1024,35 +983,36 @@ components:
             $ref: '#/components/schemas/Order'
           example: [
             {
-              "id": "1",
-              "instrument": "EURUSD",
-              "qty": 100,
+              "id": "0068030919000065",
+              "instrument": "VN30F1909",
+              "qty": 1,
               "side": "buy",
-              "type": "limit",
+              "type": "market",
+              "filledQty": 0,
               "avgPrice": 0,
-              "limitPrice": 1.14344,
-              "duration": {
-                "type": "gtt",
-                "datetime": 1548406235
-              },
-              "status": "working"
+              "limitPrice": 944.3,
+              "stopPrice": 0,
+              "parentId": null,
+              "parentType": "order",
+              "duration": null,
+              "status": "placing",
+              "lastModified": 1571632632
             },
             {
-              "id": "2",
-              "instrument": "EURUSD",
-              "qty": 100,
+              "id": "0068030919000062",
+              "instrument": "VN30F1910",
+              "qty": 2,
               "side": "sell",
               "type": "limit",
-              "filledQty": 50,
-              "avgPrice": 0,
-              "limitPrice": 1.15094,
-              "parentId": "1",
+              "filledQty": 2,
+              "avgPrice": 924.2,
+              "limitPrice": 924.2,
+              "stopPrice": 0,
+              "parentId": null,
               "parentType": "order",
-              "duration": {
-                "type": "gtt",
-                "datetime": 1548406235
-              },
-              "status": "inactive"
+              "duration": null,
+              "status": "filled",
+              "lastModified": 1571630073
             }
           ]
       required:
@@ -1070,35 +1030,36 @@ components:
             $ref: '#/components/schemas/OrderHistory'
           example: [
                     {
-                      "id": "1",
-                      "instrument": "EURUSD",
-                      "qty": 100,
-                      "side": "buy",
-                      "type": "limit",
-                      "avgPrice": 0,
-                      "limitPrice": 1.14344,
-                      "duration": {
-                        "type": "gtt",
-                        "datetime": 1548406235
-                      },
-                      "status": "filled"
-                    },
-                    {
-                      "id": "2",
-                      "instrument": "EURUSD",
-                      "qty": 100,
+                      "id": "0068030919000062",
+                      "instrument": "VN30F1910",
+                      "qty": 2,
                       "side": "sell",
                       "type": "limit",
-                      "filledQty": 50,
-                      "avgPrice": 0,
-                      "limitPrice": 1.15094,
-                      "parentId": "1",
+                      "filledQty": 2,
+                      "avgPrice": 924.2,
+                      "limitPrice": 924.2,
+                      "stopPrice": 0,
+                      "parentId": null,
                       "parentType": "order",
-                      "duration": {
-                        "type": "gtt",
-                        "datetime": 1548406235
-                      },
-                      "status": "cancelled"
+                      "duration": null,
+                      "status": "filled",
+                      "lastModified": 1571630073
+                    },
+                    {
+                      "id": "118",
+                      "instrument": "VN30F1910",
+                      "qty": 1,
+                      "side": "buy",
+                      "type": "stoplimit",
+                      "filledQty": 1,
+                      "avgPrice": 925,
+                      "limitPrice": 925,
+                      "stopPrice": 920,
+                      "parentId": null,
+                      "parentType": "order",
+                      "duration": null,
+                      "status": "filled",
+                      "lastModified": 1571200724
                     }
                   ]
       required:
@@ -1149,7 +1110,7 @@ components:
               n:
                 description: Symbol name. Should be equal to the requested one.
                 type: string
-                example: 'EURUSD'
+                example: 'VN30F1909'
               v:
                 $ref: '#/components/schemas/SingleQuote'
             required:
@@ -1844,11 +1805,11 @@ components:
         id:
           description: Unique identifier.
           type: string
-          example: '1'
+          example: 'VN30F1909buy'
         instrument:
-          description: Instrument name that is used on a broker's side.
+          description: Instrument name.
           type: string
-          example: 'EURUSD'
+          example: 'VN30F1909'
         qty:
           description: Quantity.
           type: number
@@ -1863,11 +1824,11 @@ components:
         avgPrice:
           description: Average price of position trades.
           type: number
-          example: 1.1347091
+          example: 882.6
         unrealizedPl:
           description: Unrealized (open) profit/loss.
           type: number
-          example: 19.4739
+          example: -160000
 
     Execution:
       type: object
@@ -1882,15 +1843,15 @@ components:
         id:
           description: Unique identifier.
           type: string
-          example: EX34567
+          example: 1
         instrument:
           description: Instrument id.
           type: string
-          example: 'EURUSD'
+          example: 'VN30F1910'
         price:
           description: Execution price.
           type: number
-          example: 1.23564
+          example: 925
         time:
           description: Execution time, Unix timestamp (UTC).
           type: number
@@ -2100,7 +2061,7 @@ components:
             type: array
             items:
               $ref: '#/components/schemas/DepthItem'
-        example: {asks: [[45.10, 100], [48.4, 120]], bids: [[24.7, 80], [35.6, 30]]}
+        example: {asks: [[42.10, 90],[45.10, 100], [48.4, 120]], bids: [[24.7, 80], [35.6, 30],[38.6, 35]]}
 
     GroupList:
       type: object
