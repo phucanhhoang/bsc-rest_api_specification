@@ -1261,6 +1261,33 @@ components:
     Config:
       type: object
       properties:
+        accountSummaryRow:
+          type: array
+          description:
+            Localized Account Summary Row configuration.
+
+            Account Summary Row is a panel at the top of the bottom widget with the key account indicators.
+            The `supportCustomAccountSummaryRow` flag should be enabled in the account config,
+            see the [/accounts](#operation/getAccounts) endpoint.
+            Data of the Account Summary Row is filled using the [/state](/rest-api-spec/#operation/getState) endpoint.
+          items:
+            $ref: '#/components/schemas/AccountSummaryRowItem'
+
+          example:
+            [
+              {
+                "id": "accountBalance",
+                "title": "Account Balance"
+              },
+              {
+                "id": "Equity",
+                "title": "Realized P/L"
+              },
+              {
+                "id": "Open Profit",
+                "title": "Unrealized P/L"
+              }
+            ]
         accountManager:
           type: array
           description: |
@@ -1615,25 +1642,13 @@ components:
           items:
             type: string
       example: {
-                  "balance": 41757.91,
-                  "unrealizedPl": 1053.02,
-                  "equity": 42857.56,
+                  "balance": 99999994499,
+                  "unrealizedPl": 4000000,
+                  "equity": 99991767302,
                   "amData": [
-                    [
                       [
-                        "90.22",
-                        "42857.56",
-                        "42857.56",
-                        "1099.65",
-                        "0.00",
-                        "41757.91"
+                        "0"
                       ]
-                    ]
-                  ],
-                  "accountSummaryRowData": [
-                    "96883.89",
-                    "96837.12",
-                    "-46.77"
                   ]
                 }
 
