@@ -1257,33 +1257,6 @@ components:
     Config:
       type: object
       properties:
-        accountSummaryRow:
-          type: array
-          description:
-            Localized Account Summary Row configuration.
-
-            Account Summary Row is a panel at the top of the bottom widget with the key account indicators.
-            The `supportCustomAccountSummaryRow` flag should be enabled in the account config,
-            see the [/accounts](#operation/getAccounts) endpoint.
-            Data of the Account Summary Row is filled using the [/state](/rest-api-spec/#operation/getState) endpoint.
-          items:
-            $ref: '#/components/schemas/AccountSummaryRowItem'
-
-          example:
-            [
-              {
-                "id": "accountBalance",
-                "title": "Account Balance"
-              },
-              {
-                "id": "Equity",
-                "title": "Realized P/L"
-              },
-              {
-                "id": "Open Profit",
-                "title": "Unrealized P/L"
-              }
-            ]
         accountManager:
           type: array
           description: |
