@@ -59,8 +59,7 @@ paths:
       tags:
         - Broker Configuration
       description: |
-        Return all broker instruments with corresponding TradingView instruments.
-        It is required to add a Broker to TradingView.com.
+        Return all BSC instruments.
         Please note that this endpoint works without authorization!
       responses:
         200:
@@ -77,8 +76,7 @@ paths:
         - Account
       description: Get a list of accounts owned by the user.
       security:
-        - PasswordBearer: []
-        - OAuth2Bearer: []
+        - Authentication via SSO server: []
       responses:
         200:
           description: response
@@ -100,8 +98,7 @@ paths:
         - $ref: '#/components/parameters/accountId'
         - $ref: '#/components/parameters/locale'
       security:
-        - PasswordBearer: []
-        - OAuth2Bearer: []
+        - Authentication via SSO server: []
       responses:
         200:
           description: response
@@ -250,12 +247,12 @@ paths:
         - Account
       description: |
         Get the orders that were executed during the current session for the account.
-        It is expected that broker returns orders filled/cancelled/rejected during current session.
+        It is expected that BSC returns orders filled/cancelled/rejected during current session.
       parameters:
         - $ref: '#/components/parameters/accountId'
         - name: instrument
           in: query
-          description: Broker instrument name.
+          description: BSC instrument name.
           schema:
             type: string
           required: true
@@ -575,11 +572,11 @@ paths:
         This endpoint allows you to specify a list of groups, and the [/permissions](#operation/getPermissions) endpoint specifies
         which groups are available for the certain user.
 
-        When TradingView user logs into his broker account - he will gain access to one or more groups,
+        When BSC user logs into his broker account - he will gain access to one or more groups,
         depending on the [/permissions](#operation/getPermissions) endpoint.
 
-        At the [/symbol_info](#operation/getSymbolInfo) endpoint TradingView adds the GET argument `group`
-        with the name of the group. Thus, TradingView will receive information about which group each symbol belongs to.
+        At the [/symbol_info](#operation/getSymbolInfo) endpoint BSC adds the GET argument `group`
+        with the name of the group. Thus, BSC will receive information about which group each symbol belongs to.
 
       security:
         - PasswordBearer: []
@@ -692,7 +689,7 @@ paths:
       description: |
         Stream of prices. Server constantly keeps the connection alive. If the
         connection is broken - the server constantly tries to restore it.
-        TradingView establishes up to 4 simultaneous connections to this endpoint and
+        BSC establishes up to 4 simultaneous connections to this endpoint and
         expects to get the same data to all of them.
         Transfer mode is `chunked encoding`. The data feed should set `'Transfer-Encoding:
         chunked'` and make sure that all intermediate proxies are set to use this
@@ -1315,33 +1312,6 @@ components:
     Config:
       type: object
       properties:
-        accountSummaryRow:
-          type: array
-          description:
-            Localized Account Summary Row configuration.
-
-            Account Summary Row is a panel at the top of the bottom widget with the key account indicators.
-            The `supportCustomAccountSummaryRow` flag should be enabled in the account config,
-            see the [/accounts](#operation/getAccounts) endpoint.
-            Data of the Account Summary Row is filled using the [/state](/rest-api-spec/#operation/getState) endpoint.
-          items:
-            $ref: '#/components/schemas/AccountSummaryRowItem'
-
-          example:
-            [
-              {
-                "id": "accountBalance",
-                "title": "Account Balance"
-              },
-              {
-                "id": "Equity",
-                "title": "Realized P/L"
-              },
-              {
-                "id": "Open Profit",
-                "title": "Unrealized P/L"
-              }
-            ]
         accountManager:
           type: array
           description: |
@@ -1392,7 +1362,7 @@ components:
 
     SymbolMapping:
       type: object
-      description: Map of Broker instrument names and TradingView instrument names.
+      description: Map of BSC instrument names.
       properties:
         symbols:
           type: array
@@ -1407,12 +1377,12 @@ components:
         {
           "symbols": [
             {
-              "f": ["EURUSD"],
-              "s": "FX_IDC:EURUSD"
+              "f": ["AAA"],
+              "s": "HOSE:AAA"
             },
             {
-              "f": ["AAPLE"],
-              "s": "NASDAQ:AAPLE"
+              "f": ["AAV"],
+              "s": "HNX:AAV"
             },
           ],
           "fields": ["brokerSymbol"]
@@ -1517,32 +1487,27 @@ components:
           description: |
             Time interval in milliseconds to request chart real-time bar updates. The default value is `500` ms.
           type: number
-          example: 300
+          example: 500
         quotes:
           description: |
             Time interval in milliseconds to request quote updates. The default value is `500` ms.
           type: number
-          example: 3000
+          example: 500
         orders:
           description: |
             Time interval in milliseconds to request orders. The default value is `500` ms.
           type: number
-          example: 300
+          example: 500
         positions:
           description: |
             Time interval in milliseconds to request positions. The default value is `1000` ms.
           type: number
-          example: 300
+          example: 500
         accountManager:
           description: |
             Time interval in milliseconds to update Account Manager tables. The default value is `500` ms.
           type: number
           example: 300
-        balances:
-          description: |
-            Time interval in milliseconds to request balances. The default value is `1000` ms.
-          type: number
-          example: 2000
 
     SingleField:
       type: string
@@ -1552,7 +1517,7 @@ components:
       example: brokerSymbol
     SingleMapping:
       type: object
-      description: Map of Broker instrument name to TradingView instrument name.
+      description: Map of Broker instrument name to BSC instrument name.
       properties:
         f:
           description: An array with the only one string element &ndash; broker symbol name.
@@ -1561,7 +1526,7 @@ components:
             type: string
             example: 'EURUSD'
         s:
-          description: TradingView symbol name with a prefix (AA:XXXX).
+          description: BSC symbol name with a prefix (AA:XXXX).
           type: string
           example: 'FX_IDC:EURUSD'
 
@@ -1570,32 +1535,24 @@ components:
       required:
         - id
         - name
-        - type
         - config
       properties:
         id:
           description: Unique account identifier.
           type: string
-          example: 'ACC-001'
+          example: '0001xxxxxx'
         name:
           description: Account title that is displayed to a user.
           type: string
           example: 'Demo trading account'
-        type:
-          description: Account type
-          type: string
-          enum:
-            - live
-            - demo
-          example: 'demo'
         currency:
           description: Abbreviation of account currency.
           type: string
-          example: 'JPY'
+          example: 'VND'
         currencySign:
           description: Account currency symbol.
           type: string
-          example: '¥'
+          example: 'đ'
         config:
           $ref: '#/components/schemas/AccountFlags'
 
@@ -1669,9 +1626,6 @@ components:
           type: boolean
         supportBalances:
           description:  Whether you support [/balances](/rest-api-spec/#operation/getBalances) request.
-          type: boolean
-        supportCustomAccountSummaryRow:
-          description: Whether you support custom Account Summary Row.
           type: boolean
 
     AccountState:
