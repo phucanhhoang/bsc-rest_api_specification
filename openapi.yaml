@@ -23,6 +23,7 @@ info:
       1.0.1 Release the first version.
   x-logo:
       url: https://www.bsc.com.vn/theme/image/logo.png
+  x-examples: true
 
 servers:
   - url: https://your-rest-implementation.com/api
