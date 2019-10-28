@@ -140,7 +140,7 @@ paths:
                 instrument:
                   description: Instrument to open the order on.
                   type: string
-                  example: EURUSD
+                  example: VN30F1910
                 qty:
                   description: The number of units to open order for.
                   type: number
@@ -164,24 +164,26 @@ paths:
                 limitPrice:
                   description: Limit Price for Limit or StopLimit order.
                   type: number
-                  example: 1.23456
+                  example: 918
                 stopPrice:
                   description: Stop Price for Stop or StopLimit order.
                   type: number
+                  example: 0
                 durationType:
                   description: Duration ID (if supported).
                   type: string
-                  example: gtt
                 durationDateTime:
                   description: Expiration datetime Unix timestamp (if supported by duration type).
                   type: number
-                  example: 1548406235
+                  example: 0
                 stopLoss:
                   description: StopLoss price (if supported).
                   type: number
+                  example: 0
                 takeProfit:
                   description: TakeProfit price (if supported).
                   type: number
+                  example: 0
                 digitalSignature:
                   description: Digital signature (if supported).
                   type: string
@@ -315,9 +317,6 @@ paths:
         Used for crypto currencies only.
       parameters:
         - $ref: '#/components/parameters/accountId'
-      security:
-        - PasswordBearer: []
-        - OAuth2Bearer: []
       responses:
         200:
           description: response
@@ -496,9 +495,6 @@ paths:
           schema:
             type: string
           required: true
-      security:
-        - PasswordBearer: []
-        - OAuth2Bearer: []
       responses:
         200:
           description: response
@@ -537,9 +533,6 @@ paths:
         At the [/symbol_info](#operation/getSymbolInfo) endpoint BSC adds the GET argument `group`
         with the name of the group. Thus, BSC will receive information about which group each symbol belongs to.
 
-      security:
-        - PasswordBearer: []
-        - ServerOAuth2Bearer: []
       responses:
         200:
           description: response
@@ -559,9 +552,6 @@ paths:
       description: |
         Get a list of symbol groups allowed for the user.
         It is only required if you use groups of symbols to restrict access to instrument's data.
-      security:
-        - PasswordBearer: []
-        - OAuth2Bearer: []
       responses:
         200:
           description: response
@@ -581,9 +571,6 @@ paths:
       description: Get a list of all instruments.
       parameters:
         - $ref: '#/components/parameters/group'
-      security:
-        - PasswordBearer: []
-        - ServerOAuth2Bearer: []
       responses:
         200:
           description: response
@@ -624,9 +611,6 @@ paths:
         - $ref: '#/components/parameters/historyFrom'
         - $ref: '#/components/parameters/historyTo'
         - $ref: '#/components/parameters/countback'
-      security:
-        - PasswordBearer: []
-        - ServerOAuth2Bearer: []
       responses:
         200:
           description: response
@@ -670,9 +654,7 @@ paths:
 
         The broker must remove unnecessary restrictions (firewall, rate limits, etc.) for the set of IP addresses of our servers.
 
-      security:
-        - PasswordBearer: []
-        - ServerOAuth2Bearer: []
+
       responses:
         200:
           description: response
@@ -688,6 +670,12 @@ paths:
 components:
   securitySchemes:
     Authentication via SSO server:
+      type: oauth2
+      flows:
+        implicit:
+          authorizationUrl: https://your-rest-implementation.com/api/authorize
+          scopes:
+            general: permission to perform all requests
       description: |
         We implement OAuth2 with a separate window. Developer's customers who have opened a trading account in BSC, follow our authentication flow to register their trading accounts with Developer's application.
 
