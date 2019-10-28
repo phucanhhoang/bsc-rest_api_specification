@@ -172,6 +172,7 @@ paths:
                 durationType:
                   description: Duration ID (if supported).
                   type: string
+                  example: ""
                 durationDateTime:
                   description: Expiration datetime Unix timestamp (if supported by duration type).
                   type: number
