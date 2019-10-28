@@ -846,10 +846,6 @@ components:
               $ref: '#/components/schemas/Config'
           required:
             - d
-          example: {
-            "name": "EURUSD",
-            "description": "EUR/USD "
-          }
 
     MappingResponse:
         $ref: '#/components/schemas/SymbolMapping'
