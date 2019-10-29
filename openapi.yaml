@@ -57,7 +57,6 @@ paths:
         - Configuration
       description: |
         Return all BSC instruments.
-        Please note that this endpoint works without authorization!
       responses:
         200:
           description: response
@@ -305,30 +304,6 @@ paths:
                   - $ref: '#/components/schemas/OrdersHistoryResponse'
                   - $ref: '#/components/schemas/ErrorResponse'
 
-
-  /accounts/{accountId}/balances:
-    get:
-      summary: Balances
-      operationId: getBalances
-      tags:
-        - Crypto Balances
-      description: |
-        Get crypto balances for an account.
-        Balances are displayed as the first table of the Account Summary tab.
-        Used for crypto currencies only.
-      parameters:
-        - $ref: '#/components/parameters/accountId'
-      responses:
-        200:
-          description: response
-          content:
-            application/json:
-              schema:
-                oneOf:
-                  - $ref: '#/components/schemas/CryptoBalancesResponse'
-                  - $ref: '#/components/schemas/ErrorResponse'
-
-
   /accounts/{accountId}/orders/{orderId}:
     put:
       summary: Modify Order
@@ -528,7 +503,7 @@ paths:
         This endpoint allows you to specify a list of groups, and the [/permissions](#operation/getPermissions) endpoint specifies
         which groups are available for the certain user.
 
-        When BSC user logs into his broker account - he will gain access to one or more groups,
+        When BSC user logs into his account - he will gain access to one or more groups,
         depending on the [/permissions](#operation/getPermissions) endpoint.
 
         At the [/symbol_info](#operation/getSymbolInfo) endpoint BSC adds the GET argument `group`
@@ -653,7 +628,7 @@ paths:
         Daily bars are required if they cannot be built from ticks (`has_daily`
         should be set to `true` in the symbol information).
 
-        The broker must remove unnecessary restrictions (firewall, rate limits, etc.) for the set of IP addresses of our servers.
+        The developer must remove unnecessary restrictions (firewall, rate limits, etc.) for the set of IP addresses of our servers.
 
 
       responses:
@@ -1463,18 +1438,18 @@ components:
       example: brokerSymbol
     SingleMapping:
       type: object
-      description: Map of Broker instrument name to BSC instrument name.
+      description: Map of Developer instrument name to BSC instrument name.
       properties:
         f:
-          description: An array with the only one string element &ndash; broker symbol name.
+          description: An array with the only one string element &ndash; symbol name.
           type: array
           items:
             type: string
-            example: 'EURUSD'
+            example: 'AAA'
         s:
-          description: BSC symbol name with a prefix (AA:XXXX).
+          description: Symbol name with a prefix (AA:XXXX).
           type: string
-          example: 'FX_IDC:EURUSD'
+          example: 'HOSE:AAA'
 
     Account:
       type: object
@@ -1635,7 +1610,7 @@ components:
           description: Unique identifier.
           type: string
         instrument:
-          description: Instrument name that is used on a broker's side.
+          description: Instrument name that is used on a Developer's side.
           type: string
         qty:
           description: Quantity.
@@ -1706,7 +1681,7 @@ components:
 
             ----------|-------------
 
-            placing   | order is not created on a broker's side yet
+            placing   | order is not created on a Developer's side yet
 
             inactive  | bracket order is created but waiting for a base order to
             be filled
@@ -1850,44 +1825,45 @@ components:
         - pipValue
       properties:
         name:
-          description: Broker instrument name.
+          description: Instrument name.
           type: string
-          example: 'EURUSD'
+          example: 'BSI'
         description:
           description: Instrument description.
           type: string
-          example: 'EUR/USD'
+          example: 'BIDV Securities Company'
         minQty:
           description: Minimum quantity for trading. If `lotSize` is set, then the specified value must be in lots.
           type: number
-          example: 1
+          example: 0
         maxQty:
           description: Maximum quantity for trading. If `lotSize` is set, then the specified value must be in lots.
           type: number
-          example: 100000000
+          example: 0
         qtyStep:
           description: Quantity step. If `lotSize` is set, then the specified value must be in lots.
           type: number
-          example: 100
+          example: 0
         pipSize:
           description: |
             Size of 1 pip.
             It is equal to `minTick` for non-forex symbols. For forex pairs it equals either the `minTick`,
             or the `minTick` multiplied by `10`. For example, for IBM `minTick` it is 0.01, for EURCAD `minTick` it is 0.00001.
+            For Vietnam stock market, it is not used.
           type: number
-          example: 0.0001
+          example: 0
         pipValue:
           description: |
             Value of 1 pip in the account currency, i.e. profit of the long position with a size of one lot,
             when the contract's price is changed by +1 pip.
           type: number
-          example: 0.00008845
+          example: 0
         minTick:
-          description: Minimum price movement. For example, for IBM `minTick` is 0.01, for EURCAD `minTick` is 0.00001.
+          description: Minimum price movement. For example, for BSI `minTick` is 10 by the current price is below 10.000 VND.
           type: number
-          example: 0.00001
+          example: 10
         lotSize:
-          description: Number of shares you buy in one transaction. Used for the stock market.
+          description: Number of shares you buy in one transaction. Used for the stock market. Fore HOSE `lotSize` is 10, for HNX `lotSize` is 100.
           type: number
           example: 10
         baseCurrency:
@@ -1900,7 +1876,7 @@ components:
         marginRate:
           description: Margin rate for this instrument.
           type: number
-          example: 0.05
+          example: 0
         type:
           description: Symbol type (forex/stock etc.).
           type: string
@@ -1916,7 +1892,7 @@ components:
             - forex
             - futures
             - crypto
-          example: forex
+          example: stock
 
     Permissions:
       type: object
@@ -2054,7 +2030,7 @@ components:
               id:
                 description: |
                   All characters in a group id must be either a lowercase alphabetic character or an underscore.
-                  A group id should start with the same prefix related to the broker's name.
+                  A group id should start with the same prefix related to the Developer's name.
                 type: string
       example: [{id: broker_stocks'}, {id: broker_forex}]
 
