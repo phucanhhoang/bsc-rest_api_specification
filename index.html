@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <html>
-  <head>
+
+<head>
     <title>BSC REST API Speccification</title>
     <!-- needed for adaptive design -->
-    <meta charset="utf-8"/>
+    <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,700" rel="stylesheet">
 
@@ -11,25 +12,49 @@
     ReDoc doesn't change outer page styles
     -->
     <style>
-      body {
-        margin: 0;
-        padding: 0;
-      }
-	  #app img[alt=logo]{
-		padding: 10px 20px;
-	  }
-	  .security-details{
-		display: none !important;
-	  }
+        body {
+            margin: 0;
+            padding: 0;
+        }
+        
+        h1 {
+            font-size: 36px !important;
+        }
+        
+        #app img[alt=logo] {
+            padding: 10px 20px;
+        }
+        
+        .security-details {
+            display: none !important;
+        }
+        
+        [id^='section/'] .sc-bxivhb,
+        [id^='tag/'] .sc-bxivhb {
+            padding-bottom: 0;
+        }
+        
+        [id^='section/'] .sc-bxivhb h1,
+        [id^='tag/'] .sc-bxivhb h1 {
+            margin-bottom: 0;
+        }
+        
+        [id^='section/Authentication/'] .sc-bxivhb,
+        [id^='operation/'] .sc-bxivhb {
+            padding: 20px 40px;
+        }
     </style>
-  </head>
-  <body>
-	<div id="app"></div>
-    <script src="https://cdn.jsdelivr.net/npm/redoc@next/bundles/redoc.standalone.js"> </script>
-	<script>
-		Redoc.init('https://raw.githubusercontent.com/phucanhhoang/bsc-rest_api_specification/master/openapi.yaml', {
-			hideDownloadButton: true,
-		}, document.getElementById('app'))
-	</script>
-  </body>
+</head>
+
+<body>
+    <div id="app"></div>
+    <script src="https://cdn.jsdelivr.net/npm/redoc@next/bundles/redoc.standalone.js">
+    </script>
+    <script>
+        Redoc.init('https://raw.githubusercontent.com/phucanhhoang/bsc-rest_api_specification/master/openapi.yaml', {
+            hideDownloadButton: true,
+        }, document.getElementById('app'))
+    </script>
+</body>
+
 </html>
