@@ -483,11 +483,12 @@ paths:
 
   /groups:
     get:
-      summary: Groups `(Will be released in the future)`
+      summary: Groups 
       operationId: getGroups
       tags:
         - Data Permissions
       description: |
+        `(Will be released in the future)`\
         Get a list of possible groups of symbols.
         A group is a set of symbols that share a common access level. Any user can have access to any number of such groups.
         It is required only if you use groups of symbols in order to restrict access to the instrument's data.
@@ -526,6 +527,7 @@ paths:
       tags:
         - Data Permissions
       description: |
+        `(Will be released in the future)`\
         Get a list of symbol groups allowed for the user.
         It is only required if you use groups of symbols to restrict access to instrument's data.
       responses:
