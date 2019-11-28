@@ -546,7 +546,9 @@ paths:
       operationId: getSymbolInfo
       tags:
         - Data Integration
-      description: Get a list of all instruments.
+      description: |
+        `(Will be released in the future)`\
+        Get a list of all instruments.
       parameters:
         - $ref: '#/components/parameters/group'
       responses:
@@ -566,6 +568,7 @@ paths:
       tags:
         - Data Integration
       description: |
+        `(Will be released in the future)`\
         Request for history bars. Each property of the response object is treated as a table column.
 
         Data should meet the following requirements:
@@ -608,6 +611,7 @@ paths:
       tags:
         - Data Integration
       description: |
+        `(Will be released in the future)`\
         Stream of prices. Server constantly keeps the connection alive. If the
         connection is broken - the server constantly tries to restore it.
         BSC establishes up to 4 simultaneous connections to this endpoint and
