@@ -385,6 +385,7 @@ paths:
       tags:
         - Trading
       description: |
+        `(Will be released in the future)`\
         Modify an existing position stop loss or take profit or both.
       parameters:
         - $ref: '#/components/parameters/accountId'
