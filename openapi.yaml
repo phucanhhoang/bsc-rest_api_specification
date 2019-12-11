@@ -1077,7 +1077,7 @@ components:
               n:
                 description: Symbol name. Should be equal to the requested one.
                 type: string
-                example: 'VN30F1909'
+                example: 'STB'
               v:
                 $ref: '#/components/schemas/SingleQuote'
             required:
@@ -1099,7 +1099,7 @@ components:
           n:
             description: Symbol name. Should be equal to the requested one.
             type: string
-            example: 'EURUSD'
+            example: 'STB'
           v:
             $ref: '#/components/schemas/SingleQuote'
         required:
@@ -1950,7 +1950,6 @@ components:
         ch:
           description: Change (displayed in Watch and Detail).
           type: number
-          example: 0.00762
         chp:
           description: Change percent (displayed in Watch and Detail).
           type: number
@@ -1974,19 +1973,18 @@ components:
         high_price:
           description: High price.
           type: number
-          example: 1.13854
+          example: 10600
         low_price:
           description: Low price.
           type: number
-          example: 1.13009
+          example: 9260
         prev_close_price:
           description: Previous close price.
           type: number
-          example: 1.13073
+          example: 9950
         volume:
           description: Volume.
           type: number
-          example: 0
         buyPipValue:
           description: Value of 1 pip in the account currency, used for calculating risks and trade value in the order dialog for buy orders.
           example: 1
