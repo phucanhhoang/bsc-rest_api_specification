@@ -2530,9 +2530,11 @@ components:
         id:
           description: Column identifier as defined in [/config](#operation/getConfiguration) response.
           type: string
+          example: '1000'
         value:
           description: Localized column value
-          type: string
+          type: number
+          example: 100
       required:
         - id
         - value
