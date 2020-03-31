@@ -385,7 +385,6 @@ paths:
       tags:
         - Trading
       description: |
-        `(Will be released in the future)`\
         Modify an existing position stop loss or take profit or both.
       parameters:
         - $ref: '#/components/parameters/accountId'
@@ -1245,37 +1244,20 @@ components:
           description: |
             Localized account manager's tables configuration. Account Manager is a
             page in the bottom widget. This page can have multiple tables. Data of
-            the tables is filled using the [/state](/rest-api-spec/#operation/getState) endpoint.
+            the tables is filled using the [/state](#operation/getState) endpoint.
           items:
             $ref: '#/components/schemas/AccountManagerTable'
           example: [
                       {
-                        "id": "accountSummary",
-                        "title": "",
+                        "id": "1000",
+                        "title": "ExcessEquity",
                         "columns": [
                           {
-                            "id": "todayPL",
-                            "title": "Today's P&L",
-                          },
-                          {
-                            "id": "accountValue",
-                            "title": "Account Value",
-                          },
-                          {
-                            "id": "balance",
-                            "title": "Balance",
-                          },
-                          {
-                            "id": "totalMargin",
-                            "title": "Margin",
-                          },
-                          {
-                            "id": "held",
-                            "title": "Held",
-                          },
-                          {
-                            "id": "buyingPower",
-                            "title": "Buying Power",
+                            "id": "ExcessEquity",
+                            "title": "ExcessEquity",
+                            "tooltip": "ExcessEquity",
+                            "fixedWidth": true,
+                            "sortable": false
                           }
                         ]
                       }
@@ -1287,6 +1269,30 @@ components:
             $ref: '#/components/schemas/Duration'
         pullingInterval:
           $ref: '#/components/schemas/PullingInterval'
+        positionCustomFields:
+          type: array
+          description: |
+            Additional position columns to be displayed in the positions table of the Account Manager.
+            The positions table has a default set of columns that can be extended using this configuration.
+            The `supportPositionCustomFields` flag should be enabled in the [account configuration](#operation/getAccounts).
+            Data of the additional fields is filled from the
+            [/positions](#operation/getPositions) `customFields` value.          
+          items:
+            $ref: '#/components/schemas/CustomFieldsColumn'
+          example: [
+            {
+              "id": "exchangeFee",
+              "title": "Exchange fee",
+              "tooltip": "Exchange fee for the position",
+              "alignment": "right"
+            },
+            {
+              "id": "routeFee",
+              "title": "Route fee",
+              "tooltip": "Route fee for the position",
+              "alignment": "right"
+            }
+          ]
 
     SymbolMapping:
       type: object
@@ -1375,6 +1381,31 @@ components:
           type: boolean
           example: false
 
+    CustomFieldsColumn:
+      type: object
+      required:
+        - id
+        - title
+      properties:
+        id:
+          type: string
+          example: 'balance'
+        title:
+          description: Localized title of a column.
+          type: string
+          example: 'Balance'
+        tooltip:
+          description: Tooltip that is shown on mouse hover.
+          type: string
+          example: 'Balance column'
+        alignment:
+          description: The cell value alignment. Default value is `left`
+          type: string
+          enum:
+            - left
+            - right
+          example: 'right'
+
     Duration:
       description: Single duration option.
       type: object
@@ -1411,14 +1442,14 @@ components:
       description: |
         Time intervals in milliseconds to pull data from the server.
       properties:
+        accountManager:
+          description: |
+            Time interval in milliseconds to update Account Manager tables. The default value is `500` ms.
+          type: number
+          example: 500
         history:
           description: |
             Time interval in milliseconds to request chart real-time bar updates. The default value is `500` ms.
-          type: number
-          example: 500
-        quotes:
-          description: |
-            Time interval in milliseconds to request quote updates. The default value is `500` ms.
           type: number
           example: 500
         orders:
@@ -1428,15 +1459,15 @@ components:
           example: 500
         positions:
           description: |
-            Time interval in milliseconds to request positions. The default value is `1000` ms.
+            Time interval in milliseconds to request positions. The default value is `500` ms.
           type: number
           example: 500
-        accountManager:
+        quotes:
           description: |
-            Time interval in milliseconds to update Account Manager tables. The default value is `500` ms.
+            Time interval in milliseconds to request quote updates. The default value is `500` ms.
           type: number
-          example: 300
-
+          example: 500
+        
     SingleField:
       type: string
       enum:
@@ -1784,6 +1815,13 @@ components:
           description: Unrealized (open) profit/loss.
           type: number
           example: -160000
+        customFields:
+          type: array
+          description: |
+            Localized position custom fields values data.
+            Custom fields are configured in the [/config](#operation/getConfiguration) endpoint response.
+          items:
+            $ref: '#/components/schemas/customFieldsValueItem'
 
     Execution:
       type: object
@@ -2486,3 +2524,15 @@ components:
           description: Unix time UTC.
           type: number
           example: 1547942400
+    customFieldsValueItem:
+      type: object
+      properties:
+        id:
+          description: Column identifier as defined in [/config](#operation/getConfiguration) response.
+          type: string
+        value:
+          description: Localized column value
+          type: string
+      required:
+        - id
+        - value
