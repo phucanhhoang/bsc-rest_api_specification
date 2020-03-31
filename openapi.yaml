@@ -1996,18 +1996,18 @@ components:
           description: Last price.
           type: number
           example: 1.13835
-        ask:
-          description: Ask price.
-          type: number
-          example: 1.13836
-        bid:
-          description: Bid price.
-          type: number
-          example: 1.13834
-        open_price:
-          description: Open.
-          type: number
-          example: 0
+        # ask:
+        #   description: Ask price.
+        #   type: number
+        #   example: 1.13836
+        # bid:
+        #   description: Bid price.
+        #   type: number
+        #   example: 1.13834
+        # open_price:
+        #   description: Open.
+        #   type: number
+        #   example: 0
         high_price:
           description: High price.
           type: number
@@ -2023,12 +2023,12 @@ components:
         volume:
           description: Volume.
           type: number
-        buyPipValue:
-          description: Value of 1 pip in the account currency, used for calculating risks and trade value in the order dialog for buy orders.
-          example: 1
-        sellPipValue:
-          description: Value of 1 pip in the account currency, used for calculating risks and trade value in the order dialog for sell orders.
-          example: 1
+        # buyPipValue:
+        #   description: Value of 1 pip in the account currency, used for calculating risks and trade value in the order dialog for buy orders.
+        #   example: 1
+        # sellPipValue:
+        #   description: Value of 1 pip in the account currency, used for calculating risks and trade value in the order dialog for sell orders.
+        #   example: 1
 
     DepthItem:
       type: array
