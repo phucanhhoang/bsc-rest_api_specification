@@ -1263,7 +1263,7 @@ components:
                       },
                       {
                         "id": "1001",
-                        "title": "Liability ",
+                        "title": "Liability",
                         "columns": [
                           {
                             "id": "Liability",
