@@ -1281,16 +1281,11 @@ components:
             $ref: '#/components/schemas/CustomFieldsColumn'
           example: [
             {
-              "id": "exchangeFee",
-              "title": "Exchange fee",
-              "tooltip": "Exchange fee for the position",
-              "alignment": "right"
-            },
-            {
-              "id": "routeFee",
-              "title": "Route fee",
-              "tooltip": "Route fee for the position",
-              "alignment": "right"
+              "id": "1000",
+              "title": "UpcomingStock",
+              "tooltip": "UpcomingStock",
+              "alignment": "left",
+              "customfieldstype": "Position"
             }
           ]
 
@@ -1389,22 +1384,26 @@ components:
       properties:
         id:
           type: string
-          example: 'balance'
+          example: '1000'
         title:
           description: Localized title of a column.
           type: string
-          example: 'Balance'
+          example: 'UpcomingStock'
         tooltip:
           description: Tooltip that is shown on mouse hover.
           type: string
-          example: 'Balance column'
+          example: 'UpcomingStock'
         alignment:
           description: The cell value alignment. Default value is `left`
           type: string
           enum:
             - left
             - right
-          example: 'right'
+          example: 'left'
+        customfieldstype:
+          description: Custom field type.
+          type: string
+          example: 'Position'
 
     Duration:
       description: Single duration option.
