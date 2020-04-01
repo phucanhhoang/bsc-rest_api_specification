@@ -1260,6 +1260,32 @@ components:
                             "sortable": false
                           }
                         ]
+                      },
+                      {
+                        "id": "1001",
+                        "title": "Liability ",
+                        "columns": [
+                          {
+                            "id": "Liability",
+                            "title": "Liability",
+                            "tooltip": "Liability",
+                            "fixedWidth": true,
+                            "sortable": false
+                          }
+                        ]
+                      },
+                      {
+                        "id": "1002",
+                        "title": "UpcomingCash",
+                        "columns": [
+                          {
+                            "id": "UpcomingCash",
+                            "title": "UpcomingCash",
+                            "tooltip": "UpcomingCash",
+                            "fixedWidth": true,
+                            "sortable": false
+                          }
+                        ]
                       }
                     ]
         durations:
