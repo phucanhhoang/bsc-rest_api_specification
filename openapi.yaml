@@ -14,7 +14,7 @@ info:
       Developer's application requests the info (list of orders and positions, balance info, etc.) from the BSC's server. 
       The requests are sent periodically and the intervals can be set by using the [/config](#operation/getConfiguration) endpoint.
 
-      Requests to the [/endpoint](#tag/Trading) for placing/modifying orders, positions closing, etc. occur only after actions made by the user.
+      Requests to the [endpoint](#tag/Trading) for placing/modifying orders, positions closing, etc. occur only after actions made by the user.
       
       The [/quotes](#operation/getQuotes) endpoint retrieves the current bid/ask.
       The [/depth](#operation/getDepth) endpoint retrieves Level 2 market data.
