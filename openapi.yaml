@@ -14,7 +14,7 @@ info:
       Developer's application requests the info (list of orders and positions, balance info, etc.) from the BSC's server. 
       The requests are sent periodically and the intervals can be set by using the [/config](#operation/getConfiguration) endpoint.
 
-      Requests to the [endpoints](/#tag/Trading) for placing/modifying orders, positions closing, etc. occur only after actions made by the user.
+      Requests to the [/config](/#tag/Trading) for placing/modifying orders, positions closing, etc. occur only after actions made by the user.
       
       The [/quotes](#operation/getQuotes) endpoint retrieves the current bid/ask.
       The [/depth](#operation/getDepth) endpoint retrieves Level 2 market data.
@@ -1578,7 +1578,7 @@ components:
         supportLevel2Data:
           description: |
             Whether you support Level 2 data. It is required to display DOM levels. You must implement
-            [/streaming](/#operation/streaming) to display DOM.
+            [/streaming](#operation/streaming) to display DOM.
           type: boolean
         supportPositions:
           description: |
@@ -1600,16 +1600,16 @@ components:
           description: Whether you support StopLimit orders.
           type: boolean
         supportOrdersHistory:
-          description: Whether you support [/ordersHistory](/#operation/getOrdersHistory) request.
+          description: Whether you support [/ordersHistory](#operation/getOrdersHistory) request.
           type: boolean
         supportExecutions:
-          description: Whether you support [/executions](/#operation/getExecutions) request.
+          description: Whether you support [/executions](#operation/getExecutions) request.
           type: boolean
         supportDigitalSignature:
           description: Whether you support Digital signature input field in the Order Ticket.
           type: boolean
         supportBalances:
-          description:  Whether you support [/balances](/#operation/getBalances) request.
+          description:  Whether you support [/balances](#operation/getBalances) request.
           type: boolean
 
     AccountState:
